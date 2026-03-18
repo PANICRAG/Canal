@@ -23,7 +23,7 @@ tempfile = "3.10"
 async-recursion = "1.0"
 futures.workspace = true
 async-stream = "0.3"
-bollard = "0.16"
+bollard = "0.20"
 sha2 = "0.10.9"
 
 [features]
