@@ -16,7 +16,7 @@
 </p>
 
 <p align="center">
-  <img alt="License" src="https://img.shields.io/badge/license-MIT-blue.svg">
+  <img alt="License" src="https://img.shields.io/badge/license-Apache%202.0-blue.svg">
   <img alt="Rust" src="https://img.shields.io/badge/rust-1.80%2B-orange.svg">
   <img alt="LOC" src="https://img.shields.io/badge/lines%20of%20code-160K%2B-brightgreen.svg">
 </p>
@@ -27,7 +27,7 @@
 
 Most AI frameworks give you either a thin wrapper around one LLM, or a heavyweight platform that bundles everything from auth to billing. Canal Engine sits in between — it's the **AI capability layer** you embed into your own stack.
 
-- **Multi-provider by default** — Route between Anthropic, OpenAI, Google, Qwen, OpenRouter, and Ollama with cascade fallback, A/B testing, or cost-optimized strategies. No vendor lock-in.
+- **Multi-provider by default** — Route between Anthropic, OpenAI, Google, and OpenRouter (100+ models) with cascade fallback, A/B testing, or cost-optimized strategies. No vendor lock-in.
 - **Real agent execution** — Not just "call LLM in a loop". Canal's agent has intent recognition, task planning, tool permissions, session checkpoints, and streaming — 72K lines of production logic.
 - **MCP-native** — Full Model Context Protocol client and server. Connect any MCP tool (filesystem, browser, video editing) and expose your own tools via MCP.
 - **Multi-agent orchestration** — Swarm (parallel handoff), Expert (hierarchical dispatch), and graph-based execution inspired by LangGraph. Not stubs — 8.7K lines of real collaboration logic.
@@ -95,16 +95,14 @@ See [Getting Started](docs/getting-started.md) for full setup including database
 
 ### LLM Routing
 
-Route requests across 6 providers with 7 strategies:
+Route requests across 4 providers with 7 strategies:
 
 | Provider | Models | Capabilities |
 |----------|--------|-------------|
 | **Anthropic** | Claude 4.x (Opus, Sonnet, Haiku) | Streaming, vision, tools, extended thinking |
 | **OpenAI** | GPT-4o, GPT-4, GPT-3.5 | Streaming, vision, function calling |
 | **Google** | Gemini 3 Pro / Flash | Streaming, multimodal |
-| **Qwen** | Qwen 3 Max, QwQ, Qwen VL | Streaming, vision, reasoning, tools |
-| **OpenRouter** | UI-TARS + 100 others | Any model via OpenRouter |
-| **Ollama** | Any local model | Local inference, no API key |
+| **OpenRouter** | Qwen, UI-TARS + 100 others | Any model via OpenRouter |
 
 **Routing strategies:**
 
@@ -272,26 +270,6 @@ Resource limits: 10,000 experiences/user, configurable decay rate.
 
 ---
 
-### Plugin System
-
-Connector bundles package MCP servers + skills + prompts for domain workflows:
-
-| Bundle | Domain |
-|--------|--------|
-| Customer Support | Ticket handling, knowledge base |
-| Enterprise Search | Document retrieval, semantic search |
-| Bio Research | Literature review, data analysis |
-| Product Management | Spec writing, prioritization |
-| Finance | Analysis, reporting |
-| Legal | Contract review, compliance |
-| Sales | CRM, outreach |
-| Marketing | Content, campaigns |
-| Productivity | Task management, scheduling |
-
-Document processing plugins: PDF, DOCX, XLSX, PPTX.
-
----
-
 ## Feature Flags
 
 Canal Engine uses Cargo feature flags. The default build is minimal — enable what you need:
@@ -352,10 +330,10 @@ Canal Engine is the **AI capability layer**. It does LLM routing, agent executio
 | Crate | What it does |
 |-------|-------------|
 | `gateway-core` | Agent loop, chat, MCP, workflow, graph, collaboration, learning (72K LOC) |
-| `gateway-llm` | LLM routing — Anthropic, OpenAI, Google, Qwen, OpenRouter, Ollama (9.7K LOC) |
+| `gateway-llm` | LLM routing — Anthropic, OpenAI, Google, OpenRouter (9.7K LOC) |
 | `gateway-tools` | Code execution — Python, Bash, Node.js, Go, Rust + Docker sandbox (16.5K LOC) |
 | `gateway-memory` | Semantic cache (Qdrant), plan cache, unified memory (3.5K LOC) |
-| `gateway-plugins` | Plugin and connector bundle management |
+| `gateway-plugins` | Plugin management |
 | `canal-cv` | Computer Vision — OmniParser, UI-TARS, screen automation |
 | `devtools-core` | LLM observability — Langfuse-style tracing |
 
@@ -413,7 +391,7 @@ canal-engine/
 ├── config/                 # YAML configuration (21 files)
 ├── proto/                  # gRPC definitions (5 services)
 ├── plugins/                # Document processing (PDF, DOCX, XLSX, PPTX)
-├── plugin-bundles/         # 10 domain-specific bundles
+├── plugin-bundles/         # Domain-specific bundles
 ├── spec/                   # OpenAPI spec
 ├── migrations/             # PostgreSQL migrations
 ├── tests/                  # Integration tests
@@ -459,4 +437,4 @@ Commit format: `type(scope): description` (e.g., `feat(llm): add DeepSeek provid
 
 ## License
 
-[MIT](LICENSE)
+[Apache 2.0](LICENSE)
