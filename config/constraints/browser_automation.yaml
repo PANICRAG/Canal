@@ -1,0 +1,87 @@
+# Browser Automation Constraint Profile
+#
+# This profile is optimized for browser automation tasks, enforcing a strict
+# workflow of screenshot -> detect -> click -> verify.
+#
+# See: .agent/prds/agent/A19_PROMPT_CONSTRAINT_SYSTEM.md Section 4.1
+
+name: browser_automation
+description: "Constraints for browser automation tasks"
+
+output_constraints:
+  - name: tool_call_format
+    description: "Enforce structured tool calls for browser actions"
+    prompt_injection: |
+      For browser actions, ALWAYS follow this workflow:
+
+      1. SCREENSHOT FIRST: Always call computer_screenshot() to see the current page state.
+
+      2. DETECT ELEMENTS: Use detection tools to find target coordinates:
+         - omniparser_detect(text_filter="button text") -> returns center_css coordinates
+         - uitars_detect(task="find the submit button") -> returns css_coords
+
+      3. CLICK AT COORDINATES: Use the coordinates from detection:
+         - computer_click_at(x=css_coords.x, y=css_coords.y)
+
+      RULES:
+      - NEVER guess coordinates. ALWAYS detect first.
+      - NEVER click without a recent screenshot (< 30 seconds).
+      - After clicking, take another screenshot to verify the action.
+    validation_mode: !RepairAndRetry { max_attempts: 3 }
+    enabled: true
+
+role_anchor:
+  role_name: "Browser Automation Agent"
+  anchor_prompt: |
+    You are a browser automation agent. You interact with web pages through specific tools.
+
+    CAPABILITIES:
+    - Take screenshots to see the page (computer_screenshot)
+    - Detect elements using vision models (omniparser_detect, uitars_detect)
+    - Click at specific CSS coordinates (computer_click_at)
+    - Type text (computer_type) and press keys (computer_key)
+
+    LIMITATIONS:
+    - You CANNOT see the page without taking a screenshot
+    - You CANNOT click without first detecting element coordinates
+    - You CANNOT make assumptions about page state - always verify with screenshots
+
+    WORKFLOW: screenshot -> detect -> click -> verify
+  reanchor_interval: 5
+  drift_detection: true
+  drift_keywords:
+    - pretend
+    - roleplay
+    - imagine
+    - story
+    - fiction
+  drift_response: "I'm a browser automation agent. I can help you interact with web pages. What would you like me to do on the current page?"
+
+security:
+  allowed_paths:
+    - "${WORKSPACE}/**"
+  blocked_patterns:
+    - "**/.env*"
+    - "**/password*"
+    - "**/credential*"
+    - "**/secret*"
+    - "**/*.pem"
+    - "**/*.key"
+  blocked_commands: []
+  require_confirmation:
+    - "delete"
+    - "remove"
+    - "clear all"
+    - "logout"
+    - "sign out"
+
+token_limits:
+  system_prompt_max: 8000
+  response_max: 4000
+  section_budgets:
+    role_anchor: 800
+    tool_guidance: 600
+    examples: 1000
+    security_rules: 200
+
+reasoning_mode: Direct

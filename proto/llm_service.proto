@@ -1,0 +1,161 @@
+syntax = "proto3";
+
+package canal.llm;
+
+option go_package = "github.com/canal/proto/llm";
+
+import "common.proto";
+
+// LLM routing service.
+// I/O bound — benefits from connection pooling.
+service LlmService {
+    // Send a chat request and get a complete response.
+    rpc Chat(ChatRequest) returns (ChatResponse);
+
+    // Send a chat request and get a streaming response.
+    rpc ChatStream(ChatRequest) returns (stream ChatStreamEvent);
+
+    // List registered LLM providers.
+    rpc ListProviders(ListProvidersRequest) returns (ListProvidersResponse);
+
+    // Health check.
+    rpc Health(HealthRequest) returns (HealthResponse);
+}
+
+// ============ Chat Types ============
+
+message ChatRequest {
+    repeated ChatMessage messages = 1;
+    optional string model = 2;
+    optional string profile_id = 3;
+    optional int32 max_tokens = 4;
+    optional float temperature = 5;
+    optional string system_prompt = 6;
+    repeated ToolDefinition tools = 7;
+    optional ThinkingConfig thinking = 8;
+    canal.common.TraceContext trace = 10;
+}
+
+message ChatMessage {
+    string role = 1;
+    repeated MessageBlock content = 2;
+}
+
+message MessageBlock {
+    oneof block {
+        string text = 1;
+        ToolUseBlock tool_use = 2;
+        ToolResultBlock tool_result = 3;
+        ImageBlock image = 4;
+        ThinkingBlock thinking = 5;
+    }
+}
+
+message ToolUseBlock {
+    string id = 1;
+    string name = 2;
+    string input_json = 3;
+}
+
+message ToolResultBlock {
+    string tool_use_id = 1;
+    string content = 2;
+    bool is_error = 3;
+}
+
+message ImageBlock {
+    string source_type = 1;  // "base64" or "url"
+    string media_type = 2;
+    string data = 3;
+}
+
+message ThinkingBlock {
+    string text = 1;
+}
+
+message ThinkingConfig {
+    uint32 budget_tokens = 1;
+}
+
+message ToolDefinition {
+    string name = 1;
+    string description = 2;
+    string input_schema_json = 3;
+}
+
+// ============ Response Types ============
+
+message ChatResponse {
+    repeated MessageBlock content = 1;
+    string model = 2;
+    optional string stop_reason = 3;
+    Usage usage = 4;
+}
+
+message Usage {
+    int32 input_tokens = 1;
+    int32 output_tokens = 2;
+    optional int32 cache_read_tokens = 3;
+    optional int32 cache_write_tokens = 4;
+}
+
+message ChatStreamEvent {
+    oneof event {
+        TextDelta text_delta = 1;
+        ThinkingDelta thinking_delta = 2;
+        ToolUseStart tool_use_start = 3;
+        ToolUseInputDelta tool_use_input_delta = 4;
+        ToolUseComplete tool_use_complete = 5;
+        StreamDone done = 6;
+        StreamError error = 7;
+    }
+}
+
+message TextDelta {
+    string text = 1;
+}
+
+message ThinkingDelta {
+    string text = 1;
+}
+
+message ToolUseStart {
+    string id = 1;
+    string name = 2;
+}
+
+message ToolUseInputDelta {
+    string id = 1;
+    string input_delta = 2;
+}
+
+message ToolUseComplete {
+    string id = 1;
+    string input_json = 2;
+}
+
+message StreamDone {
+    Usage usage = 1;
+    optional string stop_reason = 2;
+}
+
+message StreamError {
+    string message = 1;
+}
+
+// ============ Admin Types ============
+
+message ListProvidersRequest {
+    canal.common.TraceContext trace = 10;
+}
+
+message ListProvidersResponse {
+    repeated string providers = 1;
+}
+
+message HealthRequest {}
+
+message HealthResponse {
+    bool healthy = 1;
+    repeated string providers = 2;
+}

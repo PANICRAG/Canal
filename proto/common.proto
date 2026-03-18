@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+package canal.common;
+
+option go_package = "github.com/canal/proto/common";
+
+// Trace context for distributed observability.
+// Propagated in gRPC metadata across service boundaries.
+message TraceContext {
+    string trace_id = 1;
+    string span_id = 2;
+    optional string parent_span_id = 3;
+    string service_name = 4;
+}
+
+// Unified error representation across services.
+message ServiceError {
+    string code = 1;      // "not_found", "permission_denied", "internal", etc.
+    string message = 2;
+}

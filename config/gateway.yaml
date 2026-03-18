@@ -1,0 +1,256 @@
+# ==========================================
+# AI Gateway Configuration
+# ==========================================
+# Base configuration - environment-specific overrides in gateway.{env}.yaml
+
+server:
+  # Server port
+  port: 4000
+  # Host to bind to
+  host: "0.0.0.0"
+  # Request timeout in seconds
+  timeout: 120
+  # Maximum request body size in bytes (10MB)
+  max_body_size: 10485760
+
+# CORS configuration
+cors:
+  # Allowed origins (use ["*"] for development only)
+  origins:
+    - "http://localhost:3000"
+    - "http://localhost:5173"
+  # Allowed methods
+  methods:
+    - "GET"
+    - "POST"
+    - "PUT"
+    - "DELETE"
+    - "OPTIONS"
+  # Allowed headers
+  headers:
+    - "Authorization"
+    - "Content-Type"
+    - "X-Request-ID"
+  # Allow credentials
+  credentials: true
+  # Max age for preflight cache (seconds)
+  max_age: 3600
+
+# Logging configuration
+logging:
+  # Log level: trace, debug, info, warn, error
+  level: "info"
+  # Log format: json, pretty
+  format: "pretty"
+  # Include timestamps
+  timestamps: true
+  # Include span events
+  span_events: true
+
+# Database configuration
+database:
+  # Maximum connections in pool
+  max_connections: 10
+  # Minimum connections in pool
+  min_connections: 2
+  # Connection timeout in seconds
+  connect_timeout: 30
+  # Idle connection timeout in seconds
+  idle_timeout: 600
+  # Maximum connection lifetime in seconds
+  max_lifetime: 1800
+
+# Vector database configuration
+vector_db:
+  # Collection name for embeddings
+  collection: "gateway_embeddings"
+  # Vector dimension (depends on embedding model)
+  dimension: 1536
+  # Distance metric: cosine, euclidean, dot
+  distance: "cosine"
+
+# LLM Router configuration
+llm:
+  # Default provider
+  default_provider: "qwen"
+  # Default model
+  default_model: "qwen3-max-2026-01-23"
+  # Maximum retries on failure
+  max_retries: 3
+  # Retry delay in milliseconds
+  retry_delay_ms: 1000
+  # Request timeout in seconds
+  timeout: 120
+  # Enable caching
+  cache_enabled: true
+  # Cache TTL in seconds
+  cache_ttl: 3600
+
+  # Provider configurations
+  providers:
+    anthropic:
+      enabled: true
+      # Models available
+      models:
+        - "claude-sonnet-4-6"
+        - "claude-opus-4-6"
+        - "claude-haiku-4-5-20251001"
+      # Default max tokens
+      max_tokens: 4096
+      # Rate limits (requests per minute)
+      rate_limit: 1000
+
+    openai:
+      enabled: true
+      models:
+        - "gpt-4o"
+        - "gpt-4o-mini"
+        - "gpt-4-turbo"
+      max_tokens: 4096
+      rate_limit: 500
+
+    ollama:
+      enabled: false
+      models:
+        - "llama3.2"
+        - "mistral"
+        - "codellama"
+      max_tokens: 4096
+
+# MCP Gateway configuration
+mcp:
+  # Connection timeout in seconds
+  connect_timeout: 30
+  # Request timeout in seconds
+  request_timeout: 60
+  # Maximum concurrent connections per server
+  max_connections: 10
+  # Reconnection settings
+  reconnect:
+    enabled: true
+    max_attempts: 5
+    delay_ms: 1000
+    max_delay_ms: 30000
+
+  # Server definitions
+  servers: []
+  # Example server configuration:
+  # servers:
+  #   - id: "webapp"
+  #     name: "WebApp MCP"
+  #     transport: "http"
+  #     url: "http://localhost:3000"
+  #     enabled: true
+  #
+  #   - id: "filesystem"
+  #     name: "Filesystem MCP"
+  #     transport: "stdio"
+  #     command: "npx"
+  #     args: ["-y", "@anthropic/mcp-filesystem"]
+  #     env:
+  #       ALLOWED_PATHS: "/home/user/documents"
+  #     enabled: true
+
+# Workflow Engine configuration
+workflow:
+  # Maximum concurrent workflow executions
+  max_concurrent: 10
+  # Step timeout in seconds
+  step_timeout: 300
+  # Maximum steps per workflow
+  max_steps: 100
+  # Enable workflow persistence
+  persistence: true
+
+# Context Manager configuration
+context:
+  # Maximum context window tokens
+  max_tokens: 100000
+  # Summarization threshold (percentage)
+  summarize_threshold: 0.8
+  # Memory retention policy: all, recent, relevant
+  retention_policy: "relevant"
+  # Maximum conversation turns to keep
+  max_turns: 50
+
+# Rate limiting configuration
+rate_limit:
+  enabled: true
+  # Default requests per minute
+  default_rpm: 100
+  # Burst allowance
+  burst: 20
+  # Key extraction: ip, api_key, tenant
+  key_by: "api_key"
+
+# Authentication configuration
+auth:
+  # Enable API key authentication
+  api_key_enabled: true
+  # Enable JWT authentication
+  jwt_enabled: false
+  # JWT expiration in seconds
+  jwt_expiration: 3600
+
+# Health check configuration
+health:
+  # Include detailed checks
+  detailed: true
+  # Check database connectivity
+  check_database: true
+  # Check LLM provider connectivity
+  check_llm: true
+  # Check MCP server connectivity
+  check_mcp: true
+
+# Metrics configuration
+metrics:
+  # Enable Prometheus metrics
+  enabled: true
+  # Metrics endpoint path
+  path: "/metrics"
+  # Include default process metrics
+  process_metrics: true
+  # Include HTTP metrics
+  http_metrics: true
+  # Include LLM metrics
+  llm_metrics: true
+
+# Auto-routing configuration (A24)
+# When enabled, new chat requests without explicit collaboration_mode
+# are automatically analyzed and routed to the best execution mode
+auto_routing:
+  # Enable keyword-based auto-routing
+  enabled: true
+  # LLM classifier for semantic task classification (Phase 3)
+  llm_classifier:
+    enabled: true
+    model: "qwen-turbo"
+    temperature: 0.1
+    max_tokens: 200
+    confidence_threshold: 0.6
+    cache_size: 500
+
+# Async job system configuration
+# Submit long-running tasks as background jobs, disconnect, reconnect later
+jobs:
+  enabled: true
+  # Maximum concurrently executing jobs (semaphore permits)
+  max_concurrent: 3
+  # Interval (ms) to poll job store for queued jobs
+  poll_interval_ms: 1000
+  # Maximum execution time per job (seconds)
+  job_timeout_secs: 1800
+  # Default collaboration mode (overridable per job)
+  default_mode: "auto"
+  # Default model (overridable per job)
+  default_model: "qwen3-max-2026-01-23"
+  # Webhook notifications
+  webhook:
+    enabled: false
+    url: ""
+    events: ["completed", "failed"]
+  # Recovery on server restart
+  recovery:
+    enabled: true
+    strategy: "requeue"

@@ -1,0 +1,215 @@
+# Video Production Workflow Template
+# H3.3 - 工作流模板
+# Generated: 2026-01-22
+
+name: video-production
+display_name: "视频制作流水线"
+description: "从创意到发布的完整视频制作工作流"
+version: "1.0.0"
+category: content_creation
+
+# 工作流输入参数
+inputs:
+  - name: topic
+    type: string
+    required: true
+    description: "视频主题"
+
+  - name: style
+    type: enum
+    required: false
+    default: "informative"
+    options:
+      - informative
+      - entertaining
+      - tutorial
+      - promotional
+    description: "视频风格"
+
+  - name: target_duration
+    type: number
+    required: false
+    default: 60
+    description: "目标时长(秒)"
+
+  - name: platforms
+    type: array
+    required: false
+    default: ["tiktok", "youtube"]
+    description: "发布平台"
+
+# 工作流步骤
+steps:
+  # ============================================
+  # 阶段 1: 创意研究
+  # ============================================
+  - id: research
+    name: "研究主题"
+    type: llm_generate
+    config:
+      model: claude-3-opus-20240229
+      prompt_template: |
+        研究以下视频主题，提供关键信息和创意角度：
+
+        主题: {{topic}}
+        风格: {{style}}
+
+        请提供:
+        1. 主题背景
+        2. 目标受众
+        3. 3-5个独特角度
+        4. 关键卖点
+      max_tokens: 2000
+    output: research_results
+    timeout_secs: 120
+
+  # ============================================
+  # 阶段 2: 脚本生成
+  # ============================================
+  - id: generate_script
+    name: "生成脚本"
+    type: llm_generate
+    depends_on: [research]
+    config:
+      model: claude-3-opus-20240229
+      prompt_template: |
+        基于以下研究，创作一个 {{target_duration}} 秒的视频脚本：
+
+        研究结果:
+        {{research_results}}
+
+        风格: {{style}}
+
+        请提供完整的视频脚本，包括:
+        - 开场 hook
+        - 主要内容
+        - 结尾 CTA
+        - 字幕/旁白文本
+      max_tokens: 3000
+    output: script
+    timeout_secs: 180
+
+  # ============================================
+  # 阶段 3: 人工审批脚本
+  # ============================================
+  - id: approve_script
+    name: "审批脚本"
+    type: approval_gate
+    depends_on: [generate_script]
+    config:
+      approvers:
+        - role: content_team
+        - role: admin
+      timeout_hours: 24
+      auto_approve_after: null  # 不自动通过
+      notification:
+        channels: ["slack", "email"]
+        message: "新视频脚本待审批: {{topic}}"
+    input:
+      content: "{{script}}"
+    output: approval_result
+
+  # ============================================
+  # 阶段 4: 视频生成
+  # ============================================
+  - id: create_video
+    name: "生成视频"
+    type: tool_call
+    depends_on: [approve_script]
+    condition: "{{approval_result.approved}} == true"
+    config:
+      tool: videocli.create_video
+      params:
+        script: "{{script}}"
+        duration: "{{target_duration}}"
+        style: "{{style}}"
+    output: video_result
+    timeout_secs: 600
+    checkpoint: true  # 保存检查点
+
+  # ============================================
+  # 阶段 5: DaVinci 后期处理 (可选)
+  # ============================================
+  - id: post_production
+    name: "后期处理"
+    type: tool_call
+    depends_on: [create_video]
+    optional: true
+    config:
+      tool: davinci.process_video
+      params:
+        video_path: "{{video_result.output_path}}"
+        color_grade: true
+        add_transitions: true
+        export_format: "mp4"
+    output: final_video
+    timeout_secs: 900
+
+  # ============================================
+  # 阶段 6: 审批最终视频
+  # ============================================
+  - id: approve_video
+    name: "审批视频"
+    type: approval_gate
+    depends_on: [post_production]
+    config:
+      approvers:
+        - role: content_team
+      timeout_hours: 48
+      artifact_preview: true
+    input:
+      video_path: "{{final_video.output_path}}"
+    output: video_approval
+
+  # ============================================
+  # 阶段 7: 并行发布
+  # ============================================
+  - id: publish
+    name: "发布视频"
+    type: parallel
+    depends_on: [approve_video]
+    condition: "{{video_approval.approved}} == true"
+    branches:
+      - id: publish_tiktok
+        condition: "'tiktok' in {{platforms}}"
+        type: tool_call
+        config:
+          tool: videocli.publish_tiktok
+          params:
+            video_path: "{{final_video.output_path}}"
+            title: "{{topic}}"
+        output: tiktok_result
+
+      - id: publish_youtube
+        condition: "'youtube' in {{platforms}}"
+        type: tool_call
+        config:
+          tool: videocli.publish_youtube
+          params:
+            video_path: "{{final_video.output_path}}"
+            title: "{{topic}}"
+            description: "{{script}}"
+        output: youtube_result
+
+# 工作流输出
+outputs:
+  research: "{{research_results}}"
+  script: "{{script}}"
+  video_path: "{{final_video.output_path}}"
+  publish_results:
+    tiktok: "{{tiktok_result}}"
+    youtube: "{{youtube_result}}"
+
+# 检查点配置
+checkpoints:
+  enabled: true
+  save_after:
+    - create_video
+    - post_production
+  retention_days: 30
+
+# 错误处理
+error_handling:
+  on_failure: pause  # pause | retry | abort
+  max_retries: 2
+  notify_on_failure: true

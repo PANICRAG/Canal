@@ -1,0 +1,43 @@
+[package]
+name = "gateway-cli"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "CLI tool for AI Gateway management"
+
+[[bin]]
+name = "gateway"
+path = "src/main.rs"
+
+[dependencies]
+# Async runtime
+tokio = { workspace = true }
+
+# CLI
+clap = { version = "4.4", features = ["derive", "env"] }
+
+# HTTP client
+reqwest = { workspace = true }
+
+# Serialization
+serde = { workspace = true }
+serde_json = { workspace = true }
+
+# Error handling
+thiserror = { workspace = true }
+anyhow = { workspace = true }
+
+# Logging
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+
+# Environment
+dotenvy = { workspace = true }
+
+# Terminal
+colored = "2.1"
+
+[dev-dependencies]
+tokio-test = { workspace = true }

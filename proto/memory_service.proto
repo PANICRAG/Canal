@@ -1,0 +1,85 @@
+syntax = "proto3";
+
+package canal.memory;
+
+option go_package = "github.com/canal/proto/memory";
+
+import "common.proto";
+
+// Memory storage and retrieval service.
+// Stateful — requires persistent storage backend.
+service MemoryService {
+    // Store a memory entry.
+    rpc Store(StoreRequest) returns (StoreResponse);
+
+    // Query memory entries.
+    rpc Query(QueryRequest) returns (QueryResponse);
+
+    // List entries by category.
+    rpc ListByCategory(ListByCategoryRequest) returns (QueryResponse);
+
+    // Delete a memory entry.
+    rpc Delete(DeleteRequest) returns (DeleteResponse);
+
+    // Get total entry count.
+    rpc Count(CountRequest) returns (CountResponse);
+
+    // Health check.
+    rpc Health(HealthRequest) returns (HealthResponse);
+}
+
+// ============ Types ============
+
+message MemoryItem {
+    string id = 1;
+    string category = 2;
+    string content = 3;
+    double confidence = 4;
+    string source = 5;
+    string created_at = 6;  // RFC 3339
+}
+
+message StoreRequest {
+    MemoryItem item = 1;
+    canal.common.TraceContext trace = 10;
+}
+
+message StoreResponse {}
+
+message QueryRequest {
+    string category = 1;
+    string query = 2;
+    int32 limit = 3;
+    canal.common.TraceContext trace = 10;
+}
+
+message QueryResponse {
+    repeated MemoryItem items = 1;
+}
+
+message ListByCategoryRequest {
+    string category = 1;
+    int32 limit = 2;
+    canal.common.TraceContext trace = 10;
+}
+
+message DeleteRequest {
+    string id = 1;
+    canal.common.TraceContext trace = 10;
+}
+
+message DeleteResponse {}
+
+message CountRequest {
+    canal.common.TraceContext trace = 10;
+}
+
+message CountResponse {
+    int64 count = 1;
+}
+
+message HealthRequest {}
+
+message HealthResponse {
+    bool healthy = 1;
+}

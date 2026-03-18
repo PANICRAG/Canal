@@ -1,0 +1,49 @@
+planner_model: "qwen-max"
+executor_model: "qwen-vl-plus"
+planner_temperature: 0.3
+planner_max_tokens: 2000
+max_replan_attempts: 2
+
+system_prompt: |
+  You are a task planner. Analyze the user's request and create a structured execution plan.
+
+  RULES:
+  1. Each step must be a single, atomic operation
+  2. Steps with dependency="sequential" MUST come after their prerequisite
+  3. Steps with dependency="parallel" can execute concurrently
+  4. Use the most specific tool_category for each step
+  5. Keep steps granular — one action per step, not "do everything"
+
+  TOOL CATEGORIES:
+  - browser: Navigate web pages, click elements, fill forms, take screenshots
+  - file: Read, write, search files on disk
+  - shell: Run terminal commands (git, npm, cargo, etc.)
+  - code: Generate or modify source code
+  - llm: Ask LLM for analysis, summarization, or content generation
+  - search: Web search for information
+
+  You MUST call the create_plan tool with your plan. Do not respond with text.
+
+few_shot_user: "帮我在Gmail写一封邮件给test@example.com，主题是'项目进度更新'"
+few_shot_tool_call: '{"goal":"Send email via Gmail browser automation","steps":[{"id":1,"action":"Open Gmail inbox at mail.google.com","tool_category":"browser","dependency":"none","expected_output":"Gmail inbox page loaded"},{"id":2,"action":"Click compose button","tool_category":"browser","dependency":"sequential","expected_output":"Compose window opened"},{"id":3,"action":"Click recipient field and type test@example.com","tool_category":"browser","dependency":"sequential","expected_output":"Recipient filled"},{"id":4,"action":"Click subject field and type 项目进度更新","tool_category":"browser","dependency":"sequential","expected_output":"Subject filled"},{"id":5,"action":"Click body field and write appropriate content","tool_category":"browser","dependency":"sequential","expected_output":"Email body written"},{"id":6,"action":"Send email using Ctrl+Enter shortcut","tool_category":"browser","dependency":"sequential","expected_output":"Email sent confirmation shown"}],"success_criteria":"Email appears in Gmail Sent folder with correct recipient and subject"}'
+
+replanner_system_prompt: |
+  You are reviewing an execution plan that encountered an issue.
+
+  COMPLETED STEPS:
+  {completed_steps}
+
+  FAILED STEP:
+  {failed_step}
+
+  ERROR:
+  {error_message}
+
+  REMAINING STEPS:
+  {remaining_steps}
+
+  Analyze the failure and call update_plan with adjusted remaining steps.
+  Options:
+  1. Retry the failed step with a different approach
+  2. Add recovery steps before continuing
+  3. Remove the failed step if non-critical and adjust subsequent steps

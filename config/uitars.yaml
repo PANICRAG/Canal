@@ -1,0 +1,121 @@
+# UI-TARS Browser Automation Configuration
+# UI-TARS is a specialized model for GUI automation and precision clicking
+# https://github.com/bytedance/UI-TARS
+
+uitars:
+  # Enable UI-TARS for precision clicking
+  enabled: true
+
+  # Provider to use (must be configured in llm-providers.yaml)
+  provider: openrouter
+  model: ui-tars-72b
+
+  # Fallback model for lower latency requirements
+  fallback_model: ui-tars-7b
+
+  # Coordinate normalization factor (UI-TARS uses 1000x1000 grid)
+  coordinate_factor: 1000
+
+  # API timeout in seconds
+  timeout_seconds: 30
+
+  # Retry configuration
+  retry:
+    max_attempts: 2
+    backoff_ms: 1000
+
+  # Fallback behavior if UI-TARS fails
+  fallback:
+    enabled: true
+    on_timeout: true
+    on_parse_error: true
+    on_api_error: false
+
+  # Vision preprocessing settings for UI-TARS screenshot
+  # These control the image sent to UI-TARS for coordinate detection
+  # Higher resolution = better accuracy but more tokens/latency
+  # Equal aspect ratio is always maintained during resize
+  vision:
+    # Maximum image width (aspect ratio preserved, Lanczos3 resize)
+    # Recommended values:
+    #   600  - minimal (fast, low token, may miss small elements)
+    #   1024 - balanced (good accuracy, moderate tokens)
+    #   1280 - high accuracy (current default, good for most UIs)
+    #   1920 - full resolution (best accuracy, highest token cost)
+    max_dimension: 1280
+    # JPEG quality for compression (1-100)
+    # Recommended: 80-90 for UI-TARS, lower values blur small text
+    quality: 85
+    # Format for screenshots
+    format: jpeg
+
+# Action mapping for UI-TARS responses
+action_mapping:
+  # Single click action
+  click:
+    type: click
+    button: left
+
+  # Double click action
+  double_click:
+    type: click
+    button: left
+    count: 2
+
+  # Right click action
+  right_click:
+    type: click
+    button: right
+
+  # Text input action
+  type:
+    type: text_input
+
+  # Scroll actions
+  scroll_up:
+    type: scroll
+    direction: up
+    amount: 200
+
+  scroll_down:
+    type: scroll
+    direction: down
+    amount: 200
+
+# Prompts for UI-TARS interactions
+prompts:
+  # System prompt for element identification
+  identify_element: |
+    You are UI-TARS, a GUI automation assistant. Given a screenshot and a task description,
+    identify the exact coordinates of the element to interact with.
+
+    Return your response in the following format:
+    ACTION: <action_type>
+    COORDINATES: <x>, <y>
+    CONFIDENCE: <0.0-1.0>
+    REASONING: <brief explanation>
+
+  # Prompt for click actions
+  click_element: |
+    Given the screenshot, find the element described and return click coordinates.
+    The coordinates should be normalized to a 1000x1000 grid.
+    Target: {target}
+
+  # Prompt for form filling
+  fill_form: |
+    Given the screenshot, identify the input field for {field_name} and return:
+    1. Click coordinates to focus the field
+    2. Confirmation that the field is ready for text input
+    Target field: {field_name}
+    Value to enter: {value}
+
+# Debug settings
+debug:
+  # Log UI-TARS requests and responses
+  log_requests: false
+
+  # Save screenshots with coordinate overlays
+  save_annotated_screenshots: false
+
+  # Output directory for debug artifacts
+  output_dir: "/tmp/uitars-debug"

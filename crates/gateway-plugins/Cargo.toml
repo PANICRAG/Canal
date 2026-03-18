@@ -1,0 +1,21 @@
+[package]
+name = "gateway-plugins"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Plugin management, connector bundles, skill definitions, and subscription tracking"
+
+[dependencies]
+tokio.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+serde_yaml.workspace = true
+thiserror.workspace = true
+chrono.workspace = true
+tracing.workspace = true
+dashmap = "6"
+sha2 = "0.10"
+
+[dev-dependencies]
+tokio-test.workspace = true
+tempfile = "3"

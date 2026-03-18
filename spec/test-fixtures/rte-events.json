@@ -1,0 +1,171 @@
+{
+  "_description": "Shared RTE protocol test fixtures — used by backend (Rust), Windows (C#), and Mac (Swift) test suites",
+  "_version": "1.0",
+
+  "session_start_event": {
+    "event": "session_start",
+    "data": {
+      "session_id": "550e8400-e29b-41d4-a716-446655440000",
+      "session_secret": "dGVzdC1zZXNzaW9uLXNlY3JldC0zMmJ5dGVzISEhIQ=="
+    }
+  },
+
+  "tool_execute_request_code": {
+    "event": "tool_execute_request",
+    "data": {
+      "request_id": "12345678-1234-1234-1234-123456789abc",
+      "tool_name": "code_execute",
+      "tool_input": {
+        "language": "python",
+        "code": "print('hello world')"
+      },
+      "timeout_ms": 120000,
+      "fallback": "cloud",
+      "hmac_signature": "PLACEHOLDER_HMAC"
+    }
+  },
+
+  "tool_execute_request_browser": {
+    "event": "tool_execute_request",
+    "data": {
+      "request_id": "22345678-1234-1234-1234-123456789abc",
+      "tool_name": "browser_screenshot",
+      "tool_input": {
+        "url": "https://example.com"
+      },
+      "timeout_ms": 60000,
+      "fallback": "error",
+      "hmac_signature": "PLACEHOLDER_HMAC"
+    }
+  },
+
+  "tool_execute_request_file": {
+    "event": "tool_execute_request",
+    "data": {
+      "request_id": "32345678-1234-1234-1234-123456789abc",
+      "tool_name": "file_read",
+      "tool_input": {
+        "path": "/tmp/test.txt"
+      },
+      "timeout_ms": 30000,
+      "fallback": "retry",
+      "hmac_signature": "PLACEHOLDER_HMAC"
+    }
+  },
+
+  "tool_result_success": {
+    "request_id": "12345678-1234-1234-1234-123456789abc",
+    "result": {
+      "output": "hello world\n",
+      "exit_code": 0
+    },
+    "success": true,
+    "error": null,
+    "execution_time_ms": 150,
+    "hmac_signature": "PLACEHOLDER_HMAC"
+  },
+
+  "tool_result_error": {
+    "request_id": "12345678-1234-1234-1234-123456789abc",
+    "result": null,
+    "success": false,
+    "error": "SyntaxError: invalid syntax",
+    "execution_time_ms": 50,
+    "hmac_signature": "PLACEHOLDER_HMAC"
+  },
+
+  "content_delta_event": {
+    "event": "content_delta",
+    "data": {
+      "delta": "I'll help you with that. Let me execute the code..."
+    }
+  },
+
+  "auth_refresh_required_event": {
+    "event": "auth_refresh_required",
+    "data": {
+      "expires_at": "2026-02-10T12:00:00Z",
+      "refresh_url": "/api/auth/refresh"
+    }
+  },
+
+  "done_event": {
+    "event": "done",
+    "data": {
+      "conversation_id": "660e8400-e29b-41d4-a716-446655440000"
+    }
+  },
+
+  "client_capabilities_windows_full": {
+    "protocol_version": "1.0",
+    "supported_tools": ["code_execute", "file_read", "file_write", "browser_screenshot", "browser_click"],
+    "platform": "windows",
+    "rte_enabled": true,
+    "max_concurrent_tools": 3
+  },
+
+  "client_capabilities_macos_full": {
+    "protocol_version": "1.0",
+    "supported_tools": ["code_execute", "file_read", "file_write", "browser_screenshot", "browser_click"],
+    "platform": "macos",
+    "rte_enabled": true,
+    "max_concurrent_tools": 3
+  },
+
+  "client_capabilities_web_no_rte": {
+    "protocol_version": "1.0",
+    "supported_tools": [],
+    "platform": "web",
+    "rte_enabled": false,
+    "max_concurrent_tools": 0
+  },
+
+  "stream_chat_request_with_rte": {
+    "message": "Write a hello world program in Python",
+    "conversation_id": "770e8400-e29b-41d4-a716-446655440000",
+    "model": "qwen-max",
+    "client_capabilities": {
+      "protocol_version": "1.0",
+      "supported_tools": ["code_execute"],
+      "platform": "windows",
+      "rte_enabled": true,
+      "max_concurrent_tools": 1
+    }
+  },
+
+  "stream_chat_request_no_rte": {
+    "message": "Write a hello world program in Python",
+    "conversation_id": "880e8400-e29b-41d4-a716-446655440000",
+    "model": "qwen-max"
+  },
+
+  "hmac_test_vectors": {
+    "_description": "Test vectors for HMAC-SHA256 signing verification",
+    "secret_base64": "dGVzdC1zZXNzaW9uLXNlY3JldC0zMmJ5dGVzISEhIQ==",
+    "test_cases": [
+      {
+        "description": "Sign tool request",
+        "data": "12345678-1234-1234-1234-123456789abc:code_execute",
+        "expected_hex_length": 64
+      },
+      {
+        "description": "Sign tool result success",
+        "data": "12345678-1234-1234-1234-123456789abc:true",
+        "expected_hex_length": 64
+      },
+      {
+        "description": "Sign tool result failure",
+        "data": "12345678-1234-1234-1234-123456789abc:false",
+        "expected_hex_length": 64
+      }
+    ]
+  },
+
+  "per_tool_timeout_config": {
+    "code_execute": {"timeout_ms": 120000, "fallback": "cloud"},
+    "browser_screenshot": {"timeout_ms": 60000, "fallback": "error"},
+    "browser_click": {"timeout_ms": 60000, "fallback": "error"},
+    "file_read": {"timeout_ms": 30000, "fallback": "retry"},
+    "file_write": {"timeout_ms": 30000, "fallback": "retry"}
+  }
+}

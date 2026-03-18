@@ -1,0 +1,16 @@
+target/
+.git/
+.github/
+.vscode/
+.env
+.env.local
+.env.*.local
+.env.production
+*.pem
+*.key
+node_modules/
+models/
+*.onnx
+docs/
+*.md
+!README.md

@@ -1,0 +1,43 @@
+# Context Engineering v2 Configuration
+# Controls feature flags for gradual rollout
+
+feature_flags:
+  # Percentage of users that get the new scoring pipeline (0-100)
+  # Uses per-user sticky canary: user_id hash % 100
+  scoring_rollout_pct: 0
+  # Whether to dual-write to both old and new memory backends
+  memory_dual_write: false
+  # Whether to inject knowledge from learning system into prompts
+  knowledge_injection: true
+  # Whether to enable prompt inspection API
+  prompt_inspection: true
+  # Whether to enable conversation tracing
+  conversation_tracing: false
+
+relevance:
+  # Minimum relevance score for items to be included (0.0-1.0)
+  min_threshold: 0.3
+  # Maximum percentage of token budget for knowledge items
+  knowledge_max_pct: 40
+  # Scoring weights (must sum to 1.0)
+  keyword_weight: 0.6
+  confidence_weight: 0.3
+  recency_weight: 0.1
+  # Bonus score for skill items
+  skill_bonus: 0.1
+
+knowledge:
+  # Days before knowledge confidence starts decaying
+  decay_start_days: 90
+  # Decay rate per month after decay_start_days
+  decay_rate_per_month: 0.1
+  # Maximum number of knowledge items to inject
+  max_items: 20
+
+tracing:
+  # Directory for JSONL trace files
+  trace_dir: "~/.canal/traces"
+  # Whether to rotate trace files
+  rotate: true
+  # Maximum trace file size in MB before rotation
+  max_file_size_mb: 50

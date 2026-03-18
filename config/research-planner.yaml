@@ -1,0 +1,29 @@
+# A43: Research Planner Pipeline Configuration
+# Controls the codebase research → complexity assessment → PRD generation pipeline.
+
+# Research agent settings
+research:
+  # Model to use for codebase exploration (multi-turn agent loop)
+  model: "qwen-max"
+  # Maximum LLM turns for research (each turn may call read-only tools)
+  max_turns: 15
+  # Maximum files to read during research
+  max_files: 10
+  # Timeout for the entire research phase (seconds)
+  timeout_seconds: 120
+
+# PRD assembler settings
+prd:
+  # Model to use for PRD generation (single LLM call with generate_prd tool)
+  model: "qwen-max"
+  # Temperature for PRD generation (lower = more deterministic)
+  temperature: 0.3
+
+# Gate timeouts
+gates:
+  # How long to wait for user to answer clarifying questions (seconds)
+  clarification_timeout_seconds: 300
+  # How long to wait for user to approve/revise/reject PRD (seconds)
+  prd_approval_timeout_seconds: 300
+  # Maximum PRD revision rounds before auto-rejecting
+  max_prd_revision_rounds: 3

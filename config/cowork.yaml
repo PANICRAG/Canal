@@ -1,0 +1,156 @@
+# Canal Cowork Configuration
+# This file configures the Claude Cowork-like functionality including
+# tool use, code execution, and filesystem access.
+
+# Tool Use Configuration
+tool_use:
+  enabled: true
+  # Maximum iterations for tool use loop before stopping
+  max_iterations: 10
+  # Timeout per tool call in milliseconds
+  timeout_per_call_ms: 30000
+
+# Docker Code Execution Configuration
+docker:
+  enabled: true
+  # Docker socket path
+  socket_path: "/var/run/docker.sock"
+  # Container name prefix
+  container_prefix: "canal-executor"
+  # Network mode (none for isolation)
+  network_mode: "none"
+  # Resource limits
+  default_limits:
+    memory: "512m"
+    cpu: "1.0"
+    read_only_rootfs: true
+    tmpfs_mounts:
+      - path: "/tmp"
+        size: "100m"
+    user_id: 1000
+    group_id: 1000
+  # Cleanup timeout in seconds
+  cleanup_timeout_seconds: 300
+  # Maximum concurrent containers
+  max_concurrent_containers: 10
+
+# Code Execution Configuration
+code_execution:
+  enabled: true
+  languages:
+    python:
+      enabled: true
+      timeout_ms: 30000
+      docker_image: "python:3.11-slim"
+      preinstalled_packages:
+        - numpy
+        - pandas
+        - matplotlib
+        - requests
+    bash:
+      enabled: true
+      timeout_ms: 10000
+      docker_image: "ubuntu:22.04"
+      allowed_commands:
+        - ls
+        - cat
+        - head
+        - tail
+        - grep
+        - find
+        - wc
+        - echo
+        - pwd
+        - mkdir
+        - touch
+        - cp
+        - mv
+        - sort
+        - uniq
+        - cut
+        - awk
+        - sed
+        - tr
+        - date
+        - env
+        - which
+        - file
+        - stat
+        - du
+        - df
+      blocked_patterns:
+        - "rm -rf /"
+        - "rm -rf /*"
+        - "sudo"
+        - "> /dev"
+        - ">> /dev"
+        - "chmod 777"
+        - "chown root"
+        - "mkfs"
+        - "dd if="
+        - ":(){ :|:& };:"
+        - "wget"
+        - "curl"
+        - "nc "
+        - "netcat"
+        - "/etc/passwd"
+        - "/etc/shadow"
+
+# Filesystem Access Configuration
+filesystem:
+  enabled: true
+  # Allowed directories with permissions
+  # Configure these to match your project structure
+  allowed_directories:
+    # Example: Project workspace (read-write)
+    # - path: "/data/projects"
+    #   mode: "rw"
+    #   description: "Project workspace"
+    #   docker_mount_path: "/workspace"
+
+    # Example: Shared resources (read-only)
+    # - path: "/data/shared"
+    #   mode: "ro"
+    #   description: "Shared resources"
+    #   docker_mount_path: "/shared"
+
+  # Blocked file patterns (sensitive files)
+  blocked_patterns:
+    - ".env"
+    - ".env.*"
+    - "*.env"
+    - "credentials*"
+    - "*credentials*"
+    - "*.key"
+    - "*.pem"
+    - "*.p12"
+    - "*.pfx"
+    - "*.crt"
+    - "id_rsa*"
+    - "id_ed25519*"
+    - "id_ecdsa*"
+    - "*.ppk"
+    - "*password*"
+    - "*secret*"
+    - ".npmrc"
+    - ".pypirc"
+    - ".netrc"
+    - ".gitconfig"
+    - ".aws/credentials"
+    - ".aws/config"
+    - ".ssh/*"
+    - ".gnupg/*"
+    - ".docker/config.json"
+    - ".kube/config"
+    - ".bash_history"
+    - ".zsh_history"
+
+  # File size limits
+  max_read_bytes: 10485760   # 10MB
+  max_write_bytes: 5242880   # 5MB
+
+  # Whether to follow symlinks
+  follow_symlinks: true
+
+  # Default encoding for text files
+  default_encoding: "utf-8"

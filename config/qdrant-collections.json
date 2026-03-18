@@ -1,0 +1,101 @@
+{
+  "collections": [
+    {
+      "name": "conversations",
+      "description": "Conversation embeddings for semantic search and context retrieval",
+      "vectors": {
+        "size": 1536,
+        "distance": "Cosine"
+      },
+      "optimizers_config": {
+        "indexing_threshold": 20000
+      },
+      "on_disk_payload": true,
+      "payload_schema": {
+        "conversation_id": "keyword",
+        "user_id": "keyword",
+        "organization_id": "keyword",
+        "created_at": "datetime"
+      }
+    },
+    {
+      "name": "messages",
+      "description": "Message embeddings for retrieval-augmented generation",
+      "vectors": {
+        "size": 1536,
+        "distance": "Cosine"
+      },
+      "optimizers_config": {
+        "indexing_threshold": 20000
+      },
+      "on_disk_payload": true,
+      "payload_schema": {
+        "message_id": "keyword",
+        "conversation_id": "keyword",
+        "user_id": "keyword",
+        "role": "keyword",
+        "created_at": "datetime"
+      }
+    },
+    {
+      "name": "user_memory",
+      "description": "Long-term user memory and preferences",
+      "vectors": {
+        "size": 1536,
+        "distance": "Cosine"
+      },
+      "optimizers_config": {
+        "indexing_threshold": 10000
+      },
+      "on_disk_payload": true,
+      "payload_schema": {
+        "user_id": "keyword",
+        "memory_type": "keyword",
+        "created_at": "datetime",
+        "updated_at": "datetime"
+      }
+    },
+    {
+      "name": "artifacts",
+      "description": "Artifact embeddings for content search",
+      "vectors": {
+        "size": 1536,
+        "distance": "Cosine"
+      },
+      "optimizers_config": {
+        "indexing_threshold": 20000
+      },
+      "on_disk_payload": true,
+      "payload_schema": {
+        "artifact_id": "keyword",
+        "conversation_id": "keyword",
+        "user_id": "keyword",
+        "type": "keyword",
+        "created_at": "datetime"
+      }
+    },
+    {
+      "name": "workflows",
+      "description": "Workflow definition embeddings for template matching",
+      "vectors": {
+        "size": 1536,
+        "distance": "Cosine"
+      },
+      "optimizers_config": {
+        "indexing_threshold": 5000
+      },
+      "on_disk_payload": true,
+      "payload_schema": {
+        "workflow_id": "keyword",
+        "organization_id": "keyword",
+        "name": "keyword",
+        "enabled": "bool"
+      }
+    }
+  ],
+  "embedding_model": {
+    "provider": "openai",
+    "model": "text-embedding-3-small",
+    "dimensions": 1536
+  }
+}

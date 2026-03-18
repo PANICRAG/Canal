@@ -1,0 +1,121 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug Gateway API",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--bin=gateway-api",
+                    "--package=gateway-api"
+                ],
+                "filter": {
+                    "name": "gateway-api",
+                    "kind": "bin"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}",
+            "env": {
+                "RUST_LOG": "debug",
+                "RUST_BACKTRACE": "1"
+            },
+            "sourceLanguages": ["rust"]
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug MCP Server",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--bin=gateway-mcp-server",
+                    "--package=gateway-mcp-server"
+                ],
+                "filter": {
+                    "name": "gateway-mcp-server",
+                    "kind": "bin"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}",
+            "env": {
+                "RUST_LOG": "debug",
+                "RUST_BACKTRACE": "1"
+            },
+            "sourceLanguages": ["rust"]
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug CLI",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--bin=gateway",
+                    "--package=gateway-cli"
+                ],
+                "filter": {
+                    "name": "gateway",
+                    "kind": "bin"
+                }
+            },
+            "args": ["health"],
+            "cwd": "${workspaceFolder}",
+            "env": {
+                "RUST_LOG": "debug",
+                "GATEWAY_URL": "http://localhost:4000"
+            },
+            "sourceLanguages": ["rust"]
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug Unit Tests",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--lib",
+                    "--package=gateway-core"
+                ],
+                "filter": {
+                    "name": "gateway-core",
+                    "kind": "lib"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}",
+            "env": {
+                "RUST_LOG": "debug",
+                "RUST_BACKTRACE": "1"
+            },
+            "sourceLanguages": ["rust"]
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug Integration Tests",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--test=api_tests"
+                ],
+                "filter": {
+                    "kind": "test"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}",
+            "env": {
+                "RUST_LOG": "debug",
+                "RUST_BACKTRACE": "1",
+                "DATABASE_URL": "postgres://gateway:gateway@localhost:5432/gateway_test"
+            },
+            "sourceLanguages": ["rust"]
+        }
+    ]
+}

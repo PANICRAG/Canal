@@ -1,0 +1,15 @@
+# Cargo audit configuration
+# https://rustsec.org/
+
+[advisories]
+# Ignore specific vulnerabilities that don't have fixes available
+# or are not applicable to our use case
+ignore = [
+    # RUSTSEC-2023-0071: rsa crate timing sidechannel (Marvin Attack)
+    # No patch available yet. The rsa crate is a transitive dependency
+    # and we don't use RSA for timing-sensitive network operations.
+    "RUSTSEC-2023-0071",
+]
+
+# Treat unmaintained crates as warnings, not errors
+informational_warnings = ["unmaintained", "unsound"]

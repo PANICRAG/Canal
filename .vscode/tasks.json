@@ -1,0 +1,118 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "cargo build",
+            "type": "shell",
+            "command": "cargo",
+            "args": ["build"],
+            "group": "build",
+            "problemMatcher": ["$rustc"]
+        },
+        {
+            "label": "cargo build release",
+            "type": "shell",
+            "command": "cargo",
+            "args": ["build", "--release"],
+            "group": "build",
+            "problemMatcher": ["$rustc"]
+        },
+        {
+            "label": "cargo test",
+            "type": "shell",
+            "command": "cargo",
+            "args": ["nextest", "run"],
+            "group": "test",
+            "problemMatcher": ["$rustc"]
+        },
+        {
+            "label": "cargo test (verbose)",
+            "type": "shell",
+            "command": "cargo",
+            "args": ["nextest", "run", "--no-capture"],
+            "group": "test",
+            "problemMatcher": ["$rustc"]
+        },
+        {
+            "label": "cargo clippy",
+            "type": "shell",
+            "command": "cargo",
+            "args": ["clippy", "--all-targets", "--all-features", "--", "-D", "warnings"],
+            "group": "build",
+            "problemMatcher": ["$rustc"]
+        },
+        {
+            "label": "cargo fmt",
+            "type": "shell",
+            "command": "cargo",
+            "args": ["fmt", "--all"],
+            "group": "build",
+            "problemMatcher": []
+        },
+        {
+            "label": "cargo fmt check",
+            "type": "shell",
+            "command": "cargo",
+            "args": ["fmt", "--all", "--", "--check"],
+            "group": "build",
+            "problemMatcher": []
+        },
+        {
+            "label": "cargo watch",
+            "type": "shell",
+            "command": "cargo",
+            "args": ["watch", "-x", "run --bin gateway-api"],
+            "group": "build",
+            "isBackground": true,
+            "problemMatcher": {
+                "owner": "rust",
+                "fileLocation": ["relative", "${workspaceFolder}"],
+                "pattern": {
+                    "regexp": "^error\\[E\\d+\\]: (.*)$",
+                    "message": 1
+                },
+                "background": {
+                    "activeOnStart": true,
+                    "beginsPattern": "^\\[Running",
+                    "endsPattern": "^\\[Finished"
+                }
+            }
+        },
+        {
+            "label": "docker compose up",
+            "type": "shell",
+            "command": "docker",
+            "args": ["compose", "-f", "docker/docker-compose.dev.yml", "up", "-d"],
+            "group": "none",
+            "problemMatcher": []
+        },
+        {
+            "label": "docker compose down",
+            "type": "shell",
+            "command": "docker",
+            "args": ["compose", "-f", "docker/docker-compose.dev.yml", "down"],
+            "group": "none",
+            "problemMatcher": []
+        },
+        {
+            "label": "just dev",
+            "type": "shell",
+            "command": "just",
+            "args": ["dev"],
+            "group": "build",
+            "isBackground": true,
+            "problemMatcher": []
+        },
+        {
+            "label": "just check",
+            "type": "shell",
+            "command": "just",
+            "args": ["check"],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": ["$rustc"]
+        }
+    ]
+}

@@ -1,0 +1,25 @@
+# Clippy configuration for AI Gateway
+
+# Maximum allowed complexity for functions
+cognitive-complexity-threshold = 25
+
+# Maximum lines in a function
+too-many-lines-threshold = 100
+
+# Maximum arguments for a function
+too-many-arguments-threshold = 7
+
+# Allow certain patterns
+allow-unwrap-in-tests = true
+
+# Note: We don't use disallowed-methods for unwrap() because:
+# 1. serde_json::json! macro uses unwrap internally (false positives)
+# 2. Many safe uses in const/static contexts
+# Instead, we rely on code review to catch inappropriate unwrap usage
+
+# Allow certain types that are often flagged
+allowed-duplicate-crates = [
+    # Common duplicates in async ecosystem
+    "syn",
+    "proc-macro2",
+]

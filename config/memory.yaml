@@ -1,0 +1,41 @@
+# A38: Semantic Memory Configuration
+# Instance-level defaults for the memory system.
+# Per-profile and per-request overrides can narrow these settings.
+
+semantic_memory:
+  # Master switch for the entire instance (Layer 1).
+  # When false, all memory operations are in-memory only (keyword search, no persistence).
+  enabled: true
+
+  # Embedding model used for vector generation.
+  embedding_model: "text-embedding-3-small"
+
+  # Embedding dimension (must match the vector(N) column in migration).
+  embedding_dimensions: 1536
+
+  # Background embedder configuration.
+  embedder:
+    # Number of unembedded entries to process per batch.
+    batch_size: 20
+    # Polling interval in seconds between batch runs.
+    poll_interval_secs: 10
+
+  # Memory extraction configuration.
+  extraction:
+    # Minimum conversation messages before extraction runs.
+    min_messages: 4
+    # Maximum prompt characters sent to the extraction LLM.
+    max_prompt_chars: 6000
+    # Model used for extraction (lightweight, fast).
+    model: "qwen-turbo"
+
+  # Recall (context injection) configuration.
+  recall:
+    # Maximum number of memories injected into the system prompt.
+    max_memories: 5
+    # Minimum similarity score (0.0-1.0) for semantic search results.
+    min_similarity: 0.3
+
+  # DevTools observability for memory operations.
+  devtools:
+    enabled: true

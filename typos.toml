@@ -1,0 +1,18 @@
+[default.extend-words]
+# Domain-specific terms that are not typos
+numer = "numer"
+
+[files]
+extend-exclude = [
+    "*.lock",
+    "*.json",
+    "target/",
+    "migrations/",
+    "plugin-bundles/",
+    "plugins/",
+    "*.onnx",
+]
+
+[default.extend-identifiers]
+# Rust identifiers that look like typos but aren't
+reqwest = "reqwest"

@@ -1,0 +1,20 @@
+{
+  "name": "product-management",
+  "version": "1.0.0",
+  "description": "Write feature specs, plan roadmaps, and synthesize user research faster. Keep stakeholders updated and stay ahead of the competitive landscape.",
+  "author": "Anthropic",
+  "required_categories": [],
+  "optional_categories": [
+    "~~chat",
+    "~~project-tracker",
+    "~~knowledge-base",
+    "~~design",
+    "~~product-analytics",
+    "~~user-feedback",
+    "~~meeting-transcription"
+  ],
+  "config": {
+    "timeout_ms": 120000,
+    "max_tokens": 8192
+  }
+}

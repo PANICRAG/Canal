@@ -1,0 +1,27 @@
+[package]
+name = "canal-rpc"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.80"
+description = "Vsock RPC server for Canal VM sandbox"
+
+[[bin]]
+name = "canal-rpc"
+path = "src/main.rs"
+
+[features]
+default = []
+# Enable unsandboxed Node.js execution via RPC.
+# WARNING: Runs code directly via subprocess without Docker isolation.
+unsafe-rpc-exec = []
+
+[dependencies]
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+tokio = { version = "1.36", features = ["full"] }
+nix = { version = "0.29", features = ["user", "fs"] }
+clap = { version = "4", features = ["derive", "env"] }
+thiserror = "2.0"
+
+[target.'cfg(target_os = "linux")'.dependencies]
+vsock = "0.4"

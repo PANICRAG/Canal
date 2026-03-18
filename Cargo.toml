@@ -1,0 +1,123 @@
+[workspace]
+resolver = "2"
+members = [
+    # ── Core Engine (compiles standalone) ──
+    "crates/gateway-tool-types",
+    "crates/gateway-tools",
+    "crates/gateway-llm",
+    "crates/gateway-memory",
+    "crates/gateway-plugins",
+    "crates/gateway-service-traits",
+    "crates/gateway-core",
+    "crates/devtools-core",
+    "engine/canal-cv",
+    "crates/canal-module",
+    "crates/canal-proto",
+    "crates/canal-rpc",
+
+    # ── API & Servers (require platform auth crates — see README) ──
+    # "crates/gateway-api",
+    # "crates/gateway-mcp-server",
+    # "crates/gateway-cli",
+    # "crates/gateway-task-worker",
+    # "engine/devtools-server",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.80"
+license = "MIT"
+
+[workspace.dependencies]
+# Async runtime
+tokio = { version = "1.36", features = ["full"] }
+
+# HTTP framework
+axum = { version = "0.8", features = ["macros", "multipart"] }
+tower = "0.5"
+tower-http = { version = "0.6", features = ["cors", "trace", "timeout", "compression-gzip", "limit"] }
+
+# Serialization
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+serde_yaml = "0.9"
+
+# Database
+sqlx = { version = "0.8", features = ["runtime-tokio", "postgres", "json", "chrono", "uuid", "migrate"] }
+
+# Vector DB
+qdrant-client = "1.7"
+pgvector = { version = "0.4", features = ["sqlx"] }
+
+# HTTP client
+reqwest = { version = "0.11", features = ["json", "stream"] }
+
+# Configuration
+config = "0.15"
+dotenvy = "0.15"
+
+# Error handling
+thiserror = "2.0"
+anyhow = "1.0"
+
+# Logging
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
+
+# Utilities
+chrono = { version = "0.4", features = ["serde"] }
+uuid = { version = "1.7", features = ["v4", "serde"] }
+async-trait = "0.1"
+futures = "0.3"
+tokio-stream = { version = "0.1", features = ["sync"] }
+dashmap = "6"
+rand = "0.8"
+sha2 = "0.10"
+base62 = "2"
+
+# Authentication
+bcrypt = "0.16"
+jsonwebtoken = "9"
+totp-rs = { version = "5.6", features = ["gen_secret", "qr"] }
+rsa = { version = "0.9", features = ["pkcs5", "pem"] }
+base64 = "0.22"
+hex = "0.4"
+
+# Metrics
+metrics = "0.24"
+metrics-exporter-prometheus = "0.16"
+
+# WebSocket
+tokio-tungstenite = { version = "0.24", features = ["native-tls"] }
+
+# Redis
+fred = "9"
+
+# Docker (removed from open-source engine — used by Platform Service)
+
+# Testing
+tokio-test = "0.4"
+
+# Internal crates
+gateway-tool-types = { path = "crates/gateway-tool-types" }
+gateway-tools = { path = "crates/gateway-tools" }
+
+# OmniParser (optional - ONNX inference for element detection)
+ort = { version = "2.0.0-rc.11", default-features = true }
+ndarray = "0.17"
+strsim = "0.11"
+pure-onnx-ocr = "0.1"
+
+[profile.release]
+lto = "thin"
+codegen-units = 16
+panic = "abort"
+strip = true
+
+[profile.dev]
+opt-level = 0
+debug = true
+
+[profile.dev.package."*"]
+opt-level = 3

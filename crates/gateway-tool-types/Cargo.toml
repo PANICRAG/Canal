@@ -1,0 +1,12 @@
+[package]
+name = "gateway-tool-types"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+description = "Shared tool traits and types for Canal tool system"
+
+[dependencies]
+async-trait = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }

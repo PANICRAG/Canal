@@ -1,0 +1,76 @@
+syntax = "proto3";
+
+package canal.agent;
+
+option go_package = "github.com/canal/proto/agent";
+
+import "common.proto";
+
+// Agent orchestration service.
+// Most stateful service — holds conversation context per session.
+service AgentService {
+    // Execute a chat turn with the agent (streaming response).
+    rpc Chat(AgentChatRequest) returns (stream AgentEvent);
+
+    // Health check.
+    rpc Health(HealthRequest) returns (HealthResponse);
+}
+
+// ============ Types ============
+
+message AgentChatRequest {
+    string session_id = 1;
+    string message = 2;
+    optional string model = 3;
+    optional string collaboration_mode = 4;  // "direct", "swarm", "expert", "plan_execute"
+    canal.common.TraceContext trace = 10;
+}
+
+message AgentEvent {
+    oneof event {
+        TextChunk text = 1;
+        ThinkingChunk thinking = 2;
+        ToolCallEvent tool_call = 3;
+        ToolResultEvent tool_result = 4;
+        AgentDone done = 5;
+        AgentError error = 6;
+    }
+}
+
+message TextChunk {
+    string text = 1;
+}
+
+message ThinkingChunk {
+    string text = 1;
+}
+
+message ToolCallEvent {
+    string tool_id = 1;
+    string tool_name = 2;
+    string arguments_json = 3;
+}
+
+message ToolResultEvent {
+    string tool_id = 1;
+    string content = 2;
+    bool is_error = 3;
+}
+
+message AgentDone {
+    string final_response = 1;
+    int32 total_tokens = 2;
+    int32 tool_calls_count = 3;
+}
+
+message AgentError {
+    string message = 1;
+    string code = 2;
+}
+
+message HealthRequest {}
+
+message HealthResponse {
+    bool healthy = 1;
+    string version = 2;
+}

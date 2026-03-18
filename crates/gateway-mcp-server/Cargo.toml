@@ -1,0 +1,56 @@
+[package]
+name = "gateway-mcp-server"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "AI Gateway exposed as an MCP Server"
+
+[lib]
+name = "gateway_mcp_server"
+path = "src/lib.rs"
+
+[[bin]]
+name = "gateway-mcp-server"
+path = "src/main.rs"
+
+[dependencies]
+# Core
+gateway-core = { path = "../gateway-core", features = ["graph"] }
+
+# Async runtime
+tokio = { workspace = true }
+
+# Serialization
+serde = { workspace = true }
+serde_json = { workspace = true }
+
+# Error handling
+thiserror = { workspace = true }
+anyhow = { workspace = true }
+
+# Logging
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+
+# MCP protocol (using JSON-RPC over stdio)
+async-trait = { workspace = true }
+
+# Web framework (for HTTP transport)
+axum = { workspace = true }
+# Concurrent data structures
+dashmap = { workspace = true }
+
+# HTTP client (for proxy_chat)
+reqwest = { workspace = true }
+
+# Utilities
+uuid = { workspace = true }
+chrono = { workspace = true }
+
+# Environment
+dotenvy = { workspace = true }
+
+[dev-dependencies]
+tokio-test = { workspace = true }

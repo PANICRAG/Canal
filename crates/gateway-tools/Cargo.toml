@@ -1,0 +1,38 @@
+[package]
+name = "gateway-tools"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+description = "Tool execution implementations for Canal — filesystem, code execution, browser, etc."
+
+[dependencies]
+gateway-tool-types.workspace = true
+tokio.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+chrono.workspace = true
+uuid.workspace = true
+async-trait.workspace = true
+tracing.workspace = true
+reqwest.workspace = true
+base64 = "0.22"
+regex = "1.10"
+tempfile = "3.10"
+async-recursion = "1.0"
+futures.workspace = true
+async-stream = "0.3"
+bollard = "0.16"
+sha2 = "0.10.9"
+
+[features]
+default = []
+# Enable unsandboxed code executors (Node.js, Go, Rust).
+# These run code directly via subprocess WITHOUT Docker isolation.
+# Do NOT enable in production until Docker-wrapped (see CRITICAL_SECURITY_FIXES.md).
+unsafe-executors = []
+
+[dev-dependencies]
+tokio-test.workspace = true
+tempfile = "3"

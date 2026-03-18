@@ -1,0 +1,20 @@
+{
+  "name": "customer-support",
+  "version": "1.0.0",
+  "description": "Triage tickets, draft responses, escalate issues, and build your knowledge base. Research customer context and turn resolved issues into self-service content.",
+  "author": "Anthropic",
+  "required_categories": [],
+  "optional_categories": [
+    "~~chat",
+    "~~email",
+    "~~cloud-storage",
+    "~~support-platform",
+    "~~crm",
+    "~~knowledge-base",
+    "~~project-tracker"
+  ],
+  "config": {
+    "timeout_ms": 120000,
+    "max_tokens": 8192
+  }
+}

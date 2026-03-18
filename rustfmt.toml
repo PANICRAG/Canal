@@ -1,0 +1,21 @@
+# Rustfmt configuration for AI Gateway
+# Only stable options (compatible with stable rustfmt)
+
+# Maximum line width
+max_width = 100
+
+# Use spaces for indentation
+hard_tabs = false
+tab_spaces = 4
+
+# Edition
+edition = "2021"
+
+# Use field init shorthand
+use_field_init_shorthand = true
+
+# Use try shorthand
+use_try_shorthand = true
+
+# Newlines
+newline_style = "Auto"

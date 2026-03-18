@@ -1,0 +1,12 @@
+# Plugin Store Configuration
+#
+# catalog_dirs: List of directories to scan for plugins.
+# Each directory should contain subdirectories, one per plugin.
+# Supports both Claude Skills (SKILL.md) and Cowork (.claude-plugin/) formats.
+#
+# subscriptions_file: Path to the JSON file that persists per-user plugin subscriptions.
+
+catalog_dirs:
+  - "plugins/"
+
+subscriptions_file: "data/plugin-subscriptions.json"

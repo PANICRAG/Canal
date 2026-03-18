@@ -1,0 +1,113 @@
+{
+  "_description": "Shared plugin/connector/bundle test fixtures for A25/A26 security testing",
+  "_version": "1.0",
+
+  "plugin_catalog_response": {
+    "plugins": [
+      {
+        "id": "office-pdf",
+        "name": "PDF Tools",
+        "description": "Read, create, and manipulate PDF documents",
+        "format": "claude-skill",
+        "version": "1.0.0",
+        "installed": false,
+        "skills": ["pdf_read", "pdf_create"],
+        "references": ["pdf-formatting-guide.md"],
+        "scripts": []
+      },
+      {
+        "id": "office-excel",
+        "name": "Excel Tools",
+        "description": "Read and write Excel spreadsheets",
+        "format": "cowork",
+        "version": "1.0.0",
+        "installed": true,
+        "skills": ["excel_read", "excel_write"],
+        "references": [],
+        "scripts": ["analyze.py"]
+      }
+    ]
+  },
+
+  "plugin_install_request": {
+    "plugin_id": "office-pdf"
+  },
+
+  "plugin_uninstall_request": {
+    "plugin_id": "office-pdf"
+  },
+
+  "plugin_reference_request_valid": {
+    "plugin_id": "office-pdf",
+    "ref_name": "pdf-formatting-guide.md"
+  },
+
+  "plugin_reference_request_path_traversal": {
+    "plugin_id": "office-pdf",
+    "ref_name": "../../etc/passwd"
+  },
+
+  "plugin_reference_request_absolute_path": {
+    "plugin_id": "office-pdf",
+    "ref_name": "/etc/passwd"
+  },
+
+  "connector_catalog_response": {
+    "connectors": [
+      {
+        "id": "code-runner",
+        "name": "Code Runner",
+        "category": "code-execution",
+        "description": "Execute code in sandboxed environment",
+        "version": "1.0.0",
+        "installed": true,
+        "tools": ["code_execute", "code_analyze"]
+      },
+      {
+        "id": "web-browser",
+        "name": "Web Browser",
+        "category": "web-browsing",
+        "description": "Browser automation and web interaction",
+        "version": "1.0.0",
+        "installed": true,
+        "tools": ["browser_screenshot", "browser_click", "browser_type"]
+      }
+    ]
+  },
+
+  "bundle_list_response": {
+    "bundles": [
+      {
+        "id": "code-assistance",
+        "name": "Code Assistance",
+        "description": "Full code development bundle",
+        "connectors": ["code-runner", "file-system"],
+        "system_prompt_addon": "You are a code assistant...",
+        "active": false
+      },
+      {
+        "id": "web-research",
+        "name": "Web Research",
+        "description": "Web browsing and research bundle",
+        "connectors": ["web-browser", "web-search"],
+        "system_prompt_addon": "You are a research assistant...",
+        "active": true
+      }
+    ]
+  },
+
+  "bundle_activate_request": {
+    "bundle_id": "code-assistance"
+  },
+
+  "bundle_deactivate_request": {
+    "bundle_id": "code-assistance"
+  },
+
+  "stream_chat_request_with_plugins": {
+    "message": "Analyze this PDF file",
+    "conversation_id": "990e8400-e29b-41d4-a716-446655440000",
+    "model": "qwen-max",
+    "active_plugins": ["code-assistance", "office-pdf"]
+  }
+}

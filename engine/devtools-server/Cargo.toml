@@ -1,0 +1,60 @@
+[package]
+name = "devtools-server"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Standalone HTTP server for LLM observability — Langfuse-style trace ingestion and query"
+
+[lib]
+name = "devtools_server"
+path = "src/lib.rs"
+
+[[bin]]
+name = "devtools-server"
+path = "src/main.rs"
+
+[dependencies]
+devtools-core = { path = "../../crates/devtools-core" }
+
+# HTTP framework
+axum = { workspace = true }
+tower = { workspace = true }
+tower-http = { workspace = true }
+
+# Async runtime
+tokio = { workspace = true }
+tokio-stream = { workspace = true }
+
+# Serialization
+serde = { workspace = true }
+serde_json = { workspace = true }
+
+# Utilities
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+chrono = { workspace = true }
+uuid = { workspace = true }
+futures = { workspace = true }
+
+# Infrastructure metrics
+# bollard removed — Docker metrics moved to Platform Service
+reqwest = { workspace = true, features = ["json"] }
+
+# Log streaming
+async-stream = "0.3"
+
+# Configuration
+dotenvy = { workspace = true }
+
+# Database (optional — for real PostgreSQL observability queries)
+sqlx = { workspace = true, optional = true }
+
+[features]
+default = []
+postgres = ["dep:sqlx"]
+
+[dev-dependencies]
+tower = { workspace = true, features = ["util"] }
+http-body-util = "0.1"
+hyper = { version = "1", features = ["full"] }
+reqwest = { workspace = true }
