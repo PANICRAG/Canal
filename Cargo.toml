@@ -51,7 +51,7 @@ qdrant-client = "1.7"
 pgvector = { version = "0.4", features = ["sqlx"] }
 
 # HTTP client
-reqwest = { version = "0.11", features = ["json", "stream"] }
+reqwest = { version = "0.12", features = ["json", "stream"] }
 
 # Configuration
 config = "0.15"
