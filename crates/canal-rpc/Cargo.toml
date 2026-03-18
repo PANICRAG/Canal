@@ -24,4 +24,4 @@ clap = { version = "4", features = ["derive", "env"] }
 thiserror = "2.0"
 
 [target.'cfg(target_os = "linux")'.dependencies]
-vsock = "0.4"
+vsock = "0.5"
