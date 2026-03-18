@@ -6,7 +6,7 @@ license.workspace = true
 description = "Centralized protobuf definitions for all Canal gRPC services"
 
 [dependencies]
-prost = "0.13"
+prost = "0.14"
 tonic = "0.12"
 
 [build-dependencies]
