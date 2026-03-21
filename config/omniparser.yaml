@@ -1,0 +1,37 @@
+# OmniParser Configuration
+# YOLO icon detection + OCR text detection for browser element location
+#
+# Requires ONNX model files in the model_dir directory.
+# Run `scripts/download_omniparser_models.sh` to download models.
+
+omniparser:
+  enabled: true
+  model_dir: "models/omniparser"
+
+  yolo:
+    # YOLO input size (must match model training size)
+    input_size: 1280
+    # Minimum confidence threshold for detections
+    confidence_threshold: 0.05
+    # IoU threshold for Non-Maximum Suppression
+    iou_threshold: 0.45
+
+  ocr:
+    # Minimum text confidence threshold
+    text_threshold: 0.7
+    # Detection side length limit for PaddleOCR
+    det_limit_side_len: 2048
+    # Recognition batch size
+    rec_batch_size: 6
+
+  matching:
+    # Jaro-Winkler fuzzy match threshold (0.0 - 1.0)
+    fuzzy_threshold: 0.8
+    # Maximum number of elements to return
+    max_results: 200
+
+  performance:
+    # Use CoreML acceleration on macOS (opt-in, may have slow cold start)
+    use_coreml: false
+    # ONNX Runtime thread pool size (0 = auto)
+    thread_pool_size: 4

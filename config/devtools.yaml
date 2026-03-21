@@ -1,0 +1,29 @@
+# ==========================================
+# DevTools Server Configuration
+# LLM observability service (Langfuse-style)
+# ==========================================
+
+devtools:
+  # Server port (override with DEVTOOLS_PORT env)
+  port: 4200
+
+  # In-memory storage limits
+  max_traces: 10000
+  max_observations_per_trace: 5000
+  lru_eviction: true
+
+  # Data retention
+  retention:
+    max_age_hours: 168  # 7 days
+
+  # CORS configuration
+  cors:
+    allowed_origins:
+      - "http://localhost:5173"    # Vite dev server
+      - "tauri://localhost"        # Tauri desktop
+      - "http://localhost:4000"    # gateway-api
+
+  # Authentication
+  # API keys loaded from IDENTITY_KEYS env or canal-identity service
+  auth:
+    enabled: true

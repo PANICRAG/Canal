@@ -1,0 +1,120 @@
+{
+  "_description": "Shared auth test fixtures — JWT claims, rate limit tiers, permission sets",
+  "_version": "1.0",
+
+  "supabase_jwt_claims_free": {
+    "sub": "user-free-001",
+    "email": "free@test.com",
+    "role": "user",
+    "app_metadata": {
+      "tier": "free"
+    },
+    "exp": 9999999999,
+    "iat": 1700000000,
+    "iss": "https://test-project.supabase.co/auth/v1",
+    "aud": "authenticated"
+  },
+
+  "supabase_jwt_claims_pro": {
+    "sub": "user-pro-001",
+    "email": "pro@test.com",
+    "role": "user",
+    "app_metadata": {
+      "tier": "pro"
+    },
+    "exp": 9999999999,
+    "iat": 1700000000,
+    "iss": "https://test-project.supabase.co/auth/v1",
+    "aud": "authenticated"
+  },
+
+  "supabase_jwt_claims_enterprise": {
+    "sub": "user-ent-001",
+    "email": "enterprise@test.com",
+    "role": "user",
+    "app_metadata": {
+      "tier": "enterprise"
+    },
+    "exp": 9999999999,
+    "iat": 1700000000,
+    "iss": "https://test-project.supabase.co/auth/v1",
+    "aud": "authenticated"
+  },
+
+  "supabase_jwt_claims_admin": {
+    "sub": "user-admin-001",
+    "email": "admin@test.com",
+    "role": "admin",
+    "app_metadata": {
+      "tier": "enterprise"
+    },
+    "exp": 9999999999,
+    "iat": 1700000000,
+    "iss": "https://test-project.supabase.co/auth/v1",
+    "aud": "authenticated"
+  },
+
+  "supabase_jwt_claims_expired": {
+    "sub": "user-expired-001",
+    "email": "expired@test.com",
+    "role": "user",
+    "app_metadata": {
+      "tier": "free"
+    },
+    "exp": 1000000000,
+    "iat": 999999000,
+    "iss": "https://test-project.supabase.co/auth/v1",
+    "aud": "authenticated"
+  },
+
+  "rate_limits_by_tier": {
+    "free": {
+      "chat": {"requests_per_minute": 30, "burst": 5},
+      "tool_result": {"requests_per_minute": 200, "burst": 20},
+      "plugin": {"requests_per_minute": 60, "burst": 10},
+      "connector": {"requests_per_minute": 60, "burst": 10},
+      "debug": {"requests_per_minute": 30, "burst": 5},
+      "admin": {"requests_per_minute": 10, "burst": 2}
+    },
+    "pro": {
+      "chat": {"requests_per_minute": 120, "burst": 20},
+      "tool_result": {"requests_per_minute": 800, "burst": 80},
+      "plugin": {"requests_per_minute": 240, "burst": 40},
+      "connector": {"requests_per_minute": 240, "burst": 40},
+      "debug": {"requests_per_minute": 120, "burst": 20},
+      "admin": {"requests_per_minute": 30, "burst": 5}
+    },
+    "enterprise": {
+      "chat": {"requests_per_minute": 600, "burst": 100},
+      "tool_result": {"requests_per_minute": 2000, "burst": 200},
+      "plugin": {"requests_per_minute": 600, "burst": 100},
+      "connector": {"requests_per_minute": 600, "burst": 100},
+      "debug": {"requests_per_minute": 600, "burst": 100},
+      "admin": {"requests_per_minute": 60, "burst": 10}
+    }
+  },
+
+  "permission_sets": {
+    "free_default": ["chat", "read", "write"],
+    "pro_default": ["chat", "read", "write", "tool_execute"],
+    "enterprise_default": ["chat", "read", "write", "tool_execute", "admin_read"],
+    "admin": ["*"],
+    "api_key_default": ["chat", "tools"],
+    "no_perms": []
+  },
+
+  "cors_allowed_origins": [
+    "http://localhost:5173",
+    "http://localhost:1420",
+    "http://localhost:5173"
+  ],
+
+  "security_headers": {
+    "X-Content-Type-Options": "nosniff",
+    "X-Frame-Options": "DENY",
+    "X-XSS-Protection": "1; mode=block",
+    "Referrer-Policy": "strict-origin-when-cross-origin",
+    "Content-Security-Policy": "default-src 'self'",
+    "Strict-Transport-Security": "max-age=31536000; includeSubDomains"
+  }
+}

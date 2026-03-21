@@ -1,0 +1,41 @@
+# Default Constraint Profile
+#
+# A minimal profile with sensible defaults. This is used when no
+# specific profile is selected.
+#
+# See: .agent/prds/agent/A19_PROMPT_CONSTRAINT_SYSTEM.md
+
+name: default
+description: "Default constraint profile with sensible security defaults"
+
+output_constraints: []
+
+role_anchor: null
+
+security:
+  allowed_paths:
+    - "${WORKSPACE}/**"
+  blocked_patterns:
+    - "**/.env*"
+    - "**/secrets/**"
+    - "**/*.pem"
+    - "**/*.key"
+  blocked_commands:
+    - "rm -rf /"
+    - "sudo rm"
+    - "> /dev/sd"
+    - "mkfs"
+  require_confirmation:
+    - "git push --force"
+    - "git reset --hard"
+
+token_limits:
+  system_prompt_max: 8000
+  response_max: 4000
+  section_budgets:
+    role_anchor: 800
+    tool_guidance: 600
+    examples: 1000
+    security_rules: 200
+
+reasoning_mode: Direct

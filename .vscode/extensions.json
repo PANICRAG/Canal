@@ -1,0 +1,29 @@
+{
+    "recommendations": [
+        // Rust
+        "rust-lang.rust-analyzer",
+        "tamasfe.even-better-toml",
+        "serayuzgur.crates",
+        "vadimcn.vscode-lldb",
+
+        // Docker & Kubernetes
+        "ms-azuretools.vscode-docker",
+        "ms-kubernetes-tools.vscode-kubernetes-tools",
+
+        // YAML & JSON
+        "redhat.vscode-yaml",
+
+        // Git
+        "eamodio.gitlens",
+        "mhutchie.git-graph",
+
+        // Utilities
+        "streetsidesoftware.code-spell-checker",
+        "EditorConfig.EditorConfig",
+        "usernamehw.errorlens",
+
+        // Optional but recommended
+        "GitHub.copilot",
+        "ms-vscode-remote.remote-containers"
+    ]
+}

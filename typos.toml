@@ -1,0 +1,20 @@
+[default.extend-words]
+numer = "numer"
+Strat = "Strat"
+strat = "strat"
+Submitt = "Submitt"
+
+[default.extend-identifiers]
+reqwest = "reqwest"
+mke2fs = "mke2fs"
+
+[files]
+extend-exclude = [
+    "*.lock",
+    "*.json",
+    "target/",
+    "migrations/",
+    "plugin-bundles/",
+    "plugins/",
+    "*.onnx",
+]

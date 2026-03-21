@@ -1,0 +1,1192 @@
+openapi: "3.1.0"
+info:
+  title: Canal API
+  version: "1.0.0"
+  description: |
+    Canal AI Gateway API specification.
+
+    This serves as an agent-readable reference document for native clients (A29 WinUI, A30 Swift).
+    SSE event schemas are documented in description fields since OpenAPI does not natively support SSE.
+
+    ## Authentication
+    All endpoints require JWT Bearer token (Supabase) unless marked as public.
+    Legacy API key auth is deprecated but supported for backward compatibility.
+
+    ## SSE Streaming
+    `POST /api/chat/stream` returns an SSE stream with the following event types:
+    - `session_start` — session_id + session_secret for HMAC
+    - `content_delta` — streaming LLM text
+    - `tool_execute_request` — RTE: agent requests client-side tool execution
+    - `auth_refresh_required` — JWT about to expire, client should refresh
+    - `routing_decision` — auto-routing classification result
+    - `plan_progress` — plan execution step updates
+    - `artifact` — file/code artifact generated
+    - `done` — stream complete
+
+    ## RTE Protocol (v1.0)
+    See A28_BACKEND_PRODUCTION.md Section 3 for full protocol spec.
+    Client sends `client_capabilities` in chat request. Backend emits `tool_execute_request`
+    events. Client executes tools locally and POSTs results to `/api/tools/result`.
+    HMAC-SHA256 signing prevents injection/replay.
+
+servers:
+  - url: http://localhost:4000
+    description: Production
+  - url: http://localhost:4000
+    description: Development
+
+security:
+  - bearerAuth: []
+
+paths:
+  # ============================================================
+  # Chat
+  # ============================================================
+  /api/chat/stream:
+    post:
+      tags: [Chat]
+      summary: Stream chat with SSE (supports RTE)
+      description: |
+        Start a streaming chat session. Returns SSE events.
+
+        When `client_capabilities.rte_enabled` is true, the server may emit
+        `tool_execute_request` events that the client must handle locally.
+
+        SSE Event: `session_start`
+        ```json
+        {"session_id": "uuid", "session_secret": "base64-key", "server_capabilities": {...}}
+        ```
+
+        SSE Event: `tool_execute_request`
+        ```json
+        {"request_id": "uuid", "tool_name": "code_execute", "tool_input": {...},
+         "timeout_ms": 120000, "fallback": "cloud", "hmac_signature": "hex"}
+        ```
+
+        SSE Event: `auth_refresh_required`
+        ```json
+        {"expires_at": "2026-02-10T12:00:00Z", "refresh_url": "/api/auth/refresh"}
+        ```
+
+        SSE Event: `content_delta`
+        ```json
+        {"delta": "text chunk"}
+        ```
+
+        SSE Event: `done`
+        ```json
+        {"conversation_id": "uuid", "artifacts": [...]}
+        ```
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StreamChatRequest'
+      responses:
+        '200':
+          description: SSE stream
+          content:
+            text/event-stream:
+              schema:
+                type: string
+
+  /api/chat/message:
+    post:
+      tags: [Chat]
+      summary: Send a non-streaming chat message
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [message]
+              properties:
+                message:
+                  type: string
+                conversation_id:
+                  type: string
+                  format: uuid
+      responses:
+        '200':
+          description: Chat response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatResponse'
+
+  # ============================================================
+  # Auth
+  # ============================================================
+  /api/auth/login:
+    post:
+      tags: [Auth]
+      summary: Login with email and password
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '401':
+          description: Invalid credentials
+
+  /api/auth/refresh:
+    post:
+      tags: [Auth]
+      summary: Refresh JWT access token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [refresh_token]
+              properties:
+                refresh_token:
+                  type: string
+      responses:
+        '200':
+          description: Token refreshed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+
+  /api/auth/profile:
+    get:
+      tags: [Auth]
+      summary: Get current user profile
+      responses:
+        '200':
+          description: User profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfile'
+
+  # ============================================================
+  # Tools (RTE)
+  # ============================================================
+  /api/tools/result:
+    post:
+      tags: [Tools]
+      summary: Submit tool execution result (RTE)
+      description: |
+        Client submits the result of a locally-executed tool.
+        Must include HMAC signature matching the session secret.
+        The request_id must match a pending tool_execute_request.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ToolResultPayload'
+      responses:
+        '200':
+          description: Result accepted
+        '403':
+          description: Invalid HMAC signature
+        '404':
+          description: Unknown request_id (expired or not found)
+
+  # ============================================================
+  # Plugins (A25)
+  # ============================================================
+  /api/plugins/catalog:
+    get:
+      tags: [Plugins]
+      summary: Get plugin catalog
+      parameters:
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: format
+          in: query
+          schema:
+            type: string
+            enum: [claude-skill, cowork]
+      responses:
+        '200':
+          description: Plugin catalog
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PluginEntry'
+
+  /api/plugins/{pluginId}:
+    get:
+      tags: [Plugins]
+      summary: Get plugin details
+      parameters:
+        - name: pluginId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Plugin details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PluginEntry'
+
+  /api/plugins/reload:
+    post:
+      tags: [Plugins]
+      summary: Reload plugin catalog (admin only)
+      responses:
+        '200':
+          description: Catalog reloaded
+        '403':
+          description: Admin role required
+
+  /api/plugins/installed:
+    get:
+      tags: [Plugins]
+      summary: Get installed plugins for current user
+      responses:
+        '200':
+          description: Installed plugins
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PluginEntry'
+
+  /api/plugins/install:
+    post:
+      tags: [Plugins]
+      summary: Install a plugin
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [plugin_id]
+              properties:
+                plugin_id:
+                  type: string
+      responses:
+        '200':
+          description: Plugin installed
+
+  /api/plugins/uninstall:
+    post:
+      tags: [Plugins]
+      summary: Uninstall a plugin
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [plugin_id]
+              properties:
+                plugin_id:
+                  type: string
+      responses:
+        '200':
+          description: Plugin uninstalled
+
+  /api/plugins/reference:
+    post:
+      tags: [Plugins]
+      summary: Get plugin reference content
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [plugin_id, ref_name]
+              properties:
+                plugin_id:
+                  type: string
+                ref_name:
+                  type: string
+      responses:
+        '200':
+          description: Reference content
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  content:
+                    type: string
+
+  # ============================================================
+  # Connectors (A26)
+  # ============================================================
+  /api/connectors/catalog:
+    get:
+      tags: [Connectors]
+      summary: Get connector catalog
+      parameters:
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: category
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Connector catalog
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ConnectorEntry'
+
+  /api/connectors/{connectorId}:
+    get:
+      tags: [Connectors]
+      summary: Get connector details
+      parameters:
+        - name: connectorId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Connector details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConnectorEntry'
+
+  /api/connectors/categories:
+    get:
+      tags: [Connectors]
+      summary: Get connector categories
+      responses:
+        '200':
+          description: Categories
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ConnectorCategory'
+
+  /api/connectors/install:
+    post:
+      tags: [Connectors]
+      summary: Install a connector
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [connector_id]
+              properties:
+                connector_id:
+                  type: string
+      responses:
+        '200':
+          description: Connector installed
+
+  /api/connectors/uninstall:
+    post:
+      tags: [Connectors]
+      summary: Uninstall a connector
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [connector_id]
+              properties:
+                connector_id:
+                  type: string
+      responses:
+        '200':
+          description: Connector uninstalled
+
+  /api/connectors/installed:
+    get:
+      tags: [Connectors]
+      summary: Get installed connectors
+      responses:
+        '200':
+          description: Installed connectors
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ConnectorEntry'
+
+  /api/connectors/reference:
+    post:
+      tags: [Connectors]
+      summary: Get connector reference content
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [connector_id, ref_name]
+              properties:
+                connector_id:
+                  type: string
+                ref_name:
+                  type: string
+      responses:
+        '200':
+          description: Reference content
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  content:
+                    type: string
+
+  /api/connectors/reload:
+    post:
+      tags: [Connectors]
+      summary: Reload connector catalog (admin only)
+      responses:
+        '200':
+          description: Connectors reloaded
+        '403':
+          description: Admin role required
+
+  # ============================================================
+  # Bundles (A26)
+  # ============================================================
+  /api/bundles/list:
+    get:
+      tags: [Bundles]
+      summary: List all bundles
+      responses:
+        '200':
+          description: Bundle list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/BundleDefinition'
+
+  /api/bundles/{bundleId}:
+    get:
+      tags: [Bundles]
+      summary: Get bundle details
+      parameters:
+        - name: bundleId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Bundle details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BundleDefinition'
+
+  /api/bundles/activate:
+    post:
+      tags: [Bundles]
+      summary: Activate a bundle
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [bundle_id]
+              properties:
+                bundle_id:
+                  type: string
+      responses:
+        '200':
+          description: Bundle activated
+
+  /api/bundles/deactivate:
+    post:
+      tags: [Bundles]
+      summary: Deactivate a bundle
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [bundle_id]
+              properties:
+                bundle_id:
+                  type: string
+      responses:
+        '200':
+          description: Bundle deactivated
+
+  /api/bundles/active:
+    get:
+      tags: [Bundles]
+      summary: Get active bundles
+      responses:
+        '200':
+          description: Active bundles
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/BundleDefinition'
+
+  /api/bundles/reload:
+    post:
+      tags: [Bundles]
+      summary: Reload bundle definitions (admin only)
+      responses:
+        '200':
+          description: Bundles reloaded
+        '403':
+          description: Admin role required
+
+  # ============================================================
+  # Sync
+  # ============================================================
+  /api/sync/pull:
+    post:
+      tags: [Sync]
+      summary: Pull server changes since last sync
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [last_sync_timestamp]
+              properties:
+                last_sync_timestamp:
+                  type: string
+                  format: date-time
+      responses:
+        '200':
+          description: Changes since last sync
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SyncPullResponse'
+
+  /api/sync/push:
+    post:
+      tags: [Sync]
+      summary: Push local changes to server
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [changes]
+              properties:
+                changes:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/SyncChange'
+      responses:
+        '200':
+          description: Push result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SyncPushResponse'
+
+  # ============================================================
+  # Browser
+  # ============================================================
+  /api/browser/screenshot:
+    post:
+      tags: [Browser]
+      summary: Take browser screenshot
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                includeAccessibility:
+                  type: boolean
+                interactiveOnly:
+                  type: boolean
+      responses:
+        '200':
+          description: Screenshot data
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: string
+                    description: Base64 encoded PNG
+                  viewportWidth:
+                    type: integer
+                  viewportHeight:
+                    type: integer
+
+  /api/browser/detect_omniparser:
+    post:
+      tags: [Browser]
+      summary: Detect UI elements via OmniParser
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                min_confidence:
+                  type: number
+                text_filter:
+                  type: string
+      responses:
+        '200':
+          description: Detected elements
+
+  /api/browser/detect_uitars:
+    post:
+      tags: [Browser]
+      summary: Detect UI elements via UI-TARS
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [task]
+              properties:
+                task:
+                  type: string
+      responses:
+        '200':
+          description: Detected element with CSS coordinates
+
+  /api/browser/type:
+    post:
+      tags: [Browser]
+      summary: Type text in browser
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [text]
+              properties:
+                text:
+                  type: string
+                computerUse:
+                  type: boolean
+      responses:
+        '200':
+          description: Text typed
+
+  /api/browser/press:
+    post:
+      tags: [Browser]
+      summary: Press key in browser
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [key]
+              properties:
+                key:
+                  type: string
+                modifiers:
+                  type: array
+                  items:
+                    type: string
+                computerUse:
+                  type: boolean
+      responses:
+        '200':
+          description: Key pressed
+
+  /api/browser/extension/click_at:
+    post:
+      tags: [Browser]
+      summary: Click at CSS coordinates
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [x, y]
+              properties:
+                x:
+                  type: number
+                y:
+                  type: number
+                screenshot_coords:
+                  type: boolean
+      responses:
+        '200':
+          description: Click performed
+
+  # ============================================================
+  # MCP
+  # ============================================================
+  /api/mcp/servers:
+    get:
+      tags: [MCP]
+      summary: List MCP servers
+      responses:
+        '200':
+          description: MCP server list
+
+  /api/mcp/tools:
+    get:
+      tags: [MCP]
+      summary: List available MCP tools
+      responses:
+        '200':
+          description: Tool list
+
+  # ============================================================
+  # Graph / Orchestration
+  # ============================================================
+  /api/graph/execute/auto:
+    post:
+      tags: [Graph]
+      summary: Execute with auto-routing (collaboration mode selection)
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [task]
+              properties:
+                task:
+                  type: string
+                budget_tokens:
+                  type: integer
+                dag_scheduling:
+                  type: boolean
+                error_strategy:
+                  type: string
+                  enum: [fail_fast, continue, retry]
+      responses:
+        '200':
+          description: Execution result
+
+  # ============================================================
+  # Debug (dev-only, requires DEV_MODE=true)
+  # ============================================================
+  /debug/executions:
+    get:
+      tags: [Debug]
+      summary: List recent executions
+      security: []
+      responses:
+        '200':
+          description: Execution list
+
+  /debug/routing-history:
+    get:
+      tags: [Debug]
+      summary: Get routing classification history
+      security: []
+      responses:
+        '200':
+          description: Routing history
+
+  # ============================================================
+  # Metrics (internal, no auth)
+  # ============================================================
+  /metrics:
+    get:
+      tags: [Observability]
+      summary: Prometheus metrics scrape endpoint
+      security: []
+      responses:
+        '200':
+          description: Prometheus format metrics
+          content:
+            text/plain:
+              schema:
+                type: string
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    # ========================================
+    # Chat
+    # ========================================
+    StreamChatRequest:
+      type: object
+      required: [message]
+      properties:
+        message:
+          type: string
+        conversation_id:
+          type: string
+          format: uuid
+        model:
+          type: string
+          description: Optional model override
+        collaboration_mode:
+          type: string
+          description: "Optional: Swarm, PlanExecute, Expert, Direct"
+        active_plugins:
+          type: array
+          items:
+            type: string
+          description: "A26: Active plugin/bundle IDs for this conversation"
+        client_capabilities:
+          $ref: '#/components/schemas/ClientCapabilities'
+
+    ClientCapabilities:
+      type: object
+      properties:
+        protocol_version:
+          type: string
+          description: "RTE protocol version (e.g., '1.0')"
+        supported_tools:
+          type: array
+          items:
+            type: string
+          description: Tool names the client can execute locally
+        platform:
+          type: string
+          enum: [windows, macos, web, linux]
+        rte_enabled:
+          type: boolean
+        max_concurrent_tools:
+          type: integer
+
+    ChatResponse:
+      type: object
+      properties:
+        message:
+          type: string
+        conversation_id:
+          type: string
+          format: uuid
+        artifacts:
+          type: array
+          items:
+            $ref: '#/components/schemas/Artifact'
+
+    Artifact:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum: [code, file, image, markdown]
+        title:
+          type: string
+        content:
+          type: string
+
+    # ========================================
+    # RTE
+    # ========================================
+    ToolExecuteRequest:
+      type: object
+      description: "SSE event data for tool_execute_request"
+      required: [request_id, tool_name, tool_input, timeout_ms, hmac_signature]
+      properties:
+        request_id:
+          type: string
+          format: uuid
+        tool_name:
+          type: string
+        tool_input:
+          type: object
+          additionalProperties: true
+        timeout_ms:
+          type: integer
+        fallback:
+          type: string
+          enum: [cloud, error, retry]
+        hmac_signature:
+          type: string
+          description: "HMAC-SHA256(session_secret, request_id + ':' + tool_name)"
+
+    ToolResultPayload:
+      type: object
+      required: [request_id, success, hmac_signature]
+      properties:
+        request_id:
+          type: string
+          format: uuid
+        result:
+          type: object
+          additionalProperties: true
+          description: Tool-specific result
+        success:
+          type: boolean
+        error:
+          type: string
+          nullable: true
+        execution_time_ms:
+          type: integer
+        hmac_signature:
+          type: string
+          description: "HMAC-SHA256(session_secret, request_id + ':' + success)"
+
+    # ========================================
+    # Auth
+    # ========================================
+    AuthResponse:
+      type: object
+      properties:
+        access_token:
+          type: string
+        refresh_token:
+          type: string
+        expires_at:
+          type: string
+          format: date-time
+        user:
+          $ref: '#/components/schemas/UserProfile'
+
+    UserProfile:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        role:
+          type: string
+          enum: [user, admin]
+        tier:
+          type: string
+          enum: [free, pro, enterprise]
+        created_at:
+          type: string
+          format: date-time
+
+    # ========================================
+    # Plugins (A25)
+    # ========================================
+    PluginEntry:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        version:
+          type: string
+        format:
+          type: string
+          enum: [claude-skill, cowork]
+        description:
+          type: string
+        skills:
+          type: array
+          items:
+            $ref: '#/components/schemas/SkillInfo'
+        references:
+          type: array
+          items:
+            $ref: '#/components/schemas/ReferenceInfo'
+        scripts:
+          type: array
+          items:
+            type: string
+        installed:
+          type: boolean
+
+    SkillInfo:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        parameters:
+          type: object
+          additionalProperties: true
+
+    ReferenceInfo:
+      type: object
+      properties:
+        name:
+          type: string
+        path:
+          type: string
+        size_bytes:
+          type: integer
+
+    # ========================================
+    # Connectors (A26)
+    # ========================================
+    ConnectorEntry:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        category:
+          type: string
+          description: "Category slug (e.g., 'file-system', 'web-browser')"
+        description:
+          type: string
+        capabilities:
+          type: array
+          items:
+            type: string
+        installed:
+          type: boolean
+
+    ConnectorCategory:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        icon:
+          type: string
+
+    BundleDefinition:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        connectors:
+          type: array
+          items:
+            type: string
+          description: Connector IDs required by this bundle
+        skills:
+          type: array
+          items:
+            type: string
+          description: Skill names included
+        system_prompt_additions:
+          type: string
+          description: Extra system prompt text when bundle is active
+        active:
+          type: boolean
+
+    # ========================================
+    # Sync
+    # ========================================
+    SyncPullResponse:
+      type: object
+      properties:
+        conversations:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                format: uuid
+              title:
+                type: string
+              updated_at:
+                type: string
+                format: date-time
+              deleted:
+                type: boolean
+        messages:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                format: uuid
+              conversation_id:
+                type: string
+                format: uuid
+              role:
+                type: string
+              content:
+                type: string
+              created_at:
+                type: string
+                format: date-time
+
+    SyncChange:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: [conversation, message]
+        action:
+          type: string
+          enum: [create, update, delete]
+        data:
+          type: object
+          additionalProperties: true
+
+    SyncPushResponse:
+      type: object
+      properties:
+        accepted:
+          type: array
+          items:
+            type: string
+            format: uuid
+        conflicts:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                format: uuid
+              reason:
+                type: string
+              server_version:
+                type: object
+                additionalProperties: true

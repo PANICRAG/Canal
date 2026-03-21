@@ -1,0 +1,446 @@
+syntax = "proto3";
+
+package canal.worker;
+
+option go_package = "github.com/canal/proto/worker";
+
+// TaskWorker service runs in isolated Kubernetes pods
+// and handles all execution tasks for a user session
+service TaskWorker {
+    // Chat with AI - returns streaming events
+    rpc ExecuteChat(ChatRequest) returns (stream ChatEvent);
+
+    // Execute code in the container
+    rpc ExecuteCode(CodeRequest) returns (stream CodeOutput);
+
+    // Execute shell command
+    rpc ExecuteCommand(CommandRequest) returns (stream CommandOutput);
+
+    // File operations
+    rpc ReadFile(ReadFileRequest) returns (FileContent);
+    rpc WriteFile(WriteFileRequest) returns (WriteResponse);
+    rpc DeleteFile(DeleteFileRequest) returns (DeleteResponse);
+    rpc ListDirectory(ListDirRequest) returns (DirectoryListing);
+    rpc SearchFiles(SearchRequest) returns (SearchResults);
+
+    // Git operations
+    rpc GitClone(GitCloneRequest) returns (GitCloneResponse);
+    rpc GitStatus(GitStatusRequest) returns (GitStatusResponse);
+    rpc GitCommit(GitCommitRequest) returns (GitCommitResponse);
+    rpc GitDiff(GitDiffRequest) returns (GitDiffResponse);
+    rpc GitBranch(GitBranchRequest) returns (GitBranchResponse);
+
+    // Health and status
+    rpc Heartbeat(Empty) returns (HeartbeatResponse);
+    rpc GetStatus(Empty) returns (WorkerStatus);
+    rpc Shutdown(ShutdownRequest) returns (ShutdownResponse);
+}
+
+// ============ Common Types ============
+
+message Empty {}
+
+message Error {
+    string code = 1;
+    string message = 2;
+    map<string, string> details = 3;
+}
+
+// ============ Chat Types ============
+
+message ChatRequest {
+    string session_id = 1;
+    string message = 2;
+    repeated Message history = 3;
+    repeated Tool available_tools = 4;
+    ChatConfig config = 5;
+}
+
+message ChatConfig {
+    string model = 1;
+    int32 max_tokens = 2;
+    float temperature = 3;
+    bool stream_thinking = 4;
+}
+
+message Message {
+    string role = 1; // "user", "assistant", "system"
+    string content = 2;
+    repeated ToolCall tool_calls = 3;
+    repeated ToolResult tool_results = 4;
+}
+
+message Tool {
+    string name = 1;
+    string description = 2;
+    string input_schema = 3; // JSON schema
+}
+
+message ToolCall {
+    string id = 1;
+    string name = 2;
+    string arguments = 3; // JSON
+}
+
+message ToolResult {
+    string tool_call_id = 1;
+    string content = 2;
+    bool is_error = 3;
+}
+
+message ChatEvent {
+    oneof event {
+        TextChunk text = 1;
+        ThinkingChunk thinking = 2;
+        ToolCallEvent tool_call = 3;
+        ToolResultEvent tool_result = 4;
+        ArtifactEvent artifact = 5;
+        ChatComplete complete = 6;
+        ChatError error = 7;
+    }
+}
+
+message TextChunk {
+    string content = 1;
+}
+
+message ThinkingChunk {
+    string content = 1;
+}
+
+message ToolCallEvent {
+    string id = 1;
+    string name = 2;
+    string arguments = 3;
+    bool requires_approval = 4;
+}
+
+message ToolResultEvent {
+    string tool_call_id = 1;
+    string result = 2;
+    bool is_error = 3;
+}
+
+message ArtifactEvent {
+    string id = 1;
+    string type = 2; // "code", "file", "image", etc.
+    string title = 3;
+    string content = 4;
+    string language = 5;
+}
+
+message ChatComplete {
+    string message_id = 1;
+    int32 input_tokens = 2;
+    int32 output_tokens = 3;
+    string stop_reason = 4;
+}
+
+message ChatError {
+    string code = 1;
+    string message = 2;
+    bool retriable = 3;
+}
+
+// ============ Code Execution Types ============
+
+message CodeRequest {
+    string session_id = 1;
+    string code = 2;
+    string language = 3;
+    int32 timeout_seconds = 4;
+    map<string, string> env = 5;
+    string working_dir = 6;
+}
+
+message CodeOutput {
+    oneof output {
+        string stdout = 1;
+        string stderr = 2;
+        CodeComplete complete = 3;
+        CodeError error = 4;
+    }
+}
+
+message CodeComplete {
+    int32 exit_code = 1;
+    int64 execution_time_ms = 2;
+    int64 memory_used_bytes = 3;
+}
+
+message CodeError {
+    string code = 1;
+    string message = 2;
+}
+
+// ============ Command Execution Types ============
+
+message CommandRequest {
+    string session_id = 1;
+    string command = 2;
+    repeated string args = 3;
+    string working_dir = 4;
+    map<string, string> env = 5;
+    int32 timeout_seconds = 6;
+    bool pty = 7; // Use pseudo-terminal
+}
+
+message CommandOutput {
+    oneof output {
+        bytes data = 1; // Raw output bytes
+        CommandComplete complete = 2;
+        CommandError error = 3;
+    }
+}
+
+message CommandComplete {
+    int32 exit_code = 1;
+    int64 execution_time_ms = 2;
+}
+
+message CommandError {
+    string code = 1;
+    string message = 2;
+}
+
+// ============ File Operation Types ============
+
+message ReadFileRequest {
+    string path = 1;
+    int64 offset = 2;
+    int64 limit = 3;
+    string encoding = 4; // "utf8", "base64", "binary"
+}
+
+message FileContent {
+    string path = 1;
+    bytes content = 2;
+    string encoding = 3;
+    int64 size = 4;
+    string mime_type = 5;
+    bool is_binary = 6;
+    bool truncated = 7;
+}
+
+message WriteFileRequest {
+    string path = 1;
+    bytes content = 2;
+    string encoding = 3;
+    bool create_dirs = 4;
+    bool overwrite = 5;
+    bool append = 6;
+}
+
+message WriteResponse {
+    string path = 1;
+    int64 bytes_written = 2;
+    bool created = 3;
+}
+
+message DeleteFileRequest {
+    string path = 1;
+    bool recursive = 2;
+}
+
+message DeleteResponse {
+    string path = 1;
+    bool deleted = 2;
+}
+
+message ListDirRequest {
+    string path = 1;
+    bool recursive = 2;
+    int32 max_depth = 3;
+    string pattern = 4; // Glob pattern filter
+    bool include_hidden = 5;
+}
+
+message DirectoryListing {
+    string path = 1;
+    repeated FileEntry entries = 2;
+    int32 total_count = 3;
+    bool truncated = 4;
+}
+
+message FileEntry {
+    string name = 1;
+    string path = 2;
+    EntryType type = 3;
+    int64 size = 4;
+    int64 modified_at = 5;
+    string permissions = 6;
+}
+
+enum EntryType {
+    ENTRY_TYPE_UNKNOWN = 0;
+    ENTRY_TYPE_FILE = 1;
+    ENTRY_TYPE_DIRECTORY = 2;
+    ENTRY_TYPE_SYMLINK = 3;
+}
+
+message SearchRequest {
+    string path = 1;
+    string pattern = 2;
+    bool is_regex = 3;
+    bool case_sensitive = 4;
+    string file_pattern = 5; // Glob for files to search
+    int32 max_results = 6;
+    int32 context_lines = 7;
+}
+
+message SearchResults {
+    repeated SearchMatch matches = 1;
+    int32 total_matches = 2;
+    int32 files_searched = 3;
+    bool truncated = 4;
+}
+
+message SearchMatch {
+    string file = 1;
+    int32 line_number = 2;
+    string line_content = 3;
+    repeated string context_before = 4;
+    repeated string context_after = 5;
+}
+
+// ============ Git Types ============
+
+message GitCloneRequest {
+    string repo_url = 1;
+    string target_path = 2;
+    string branch = 3;
+    int32 depth = 4;
+    GitCredentials credentials = 5;
+}
+
+message GitCredentials {
+    oneof auth {
+        string ssh_key = 1;
+        UsernamePassword username_password = 2;
+        string token = 3;
+    }
+}
+
+message UsernamePassword {
+    string username = 1;
+    string password = 2;
+}
+
+message GitCloneResponse {
+    string path = 1;
+    string commit_hash = 2;
+    string branch = 3;
+}
+
+message GitStatusRequest {
+    string path = 1;
+}
+
+message GitStatusResponse {
+    string branch = 1;
+    string commit_hash = 2;
+    repeated GitFileStatus files = 3;
+    bool is_clean = 4;
+    int32 ahead = 5;
+    int32 behind = 6;
+}
+
+message GitFileStatus {
+    string path = 1;
+    string status = 2; // "modified", "added", "deleted", "renamed", "untracked"
+    string staged_status = 3;
+}
+
+message GitCommitRequest {
+    string path = 1;
+    string message = 2;
+    repeated string files = 3; // Files to stage, empty = all
+    string author_name = 4;
+    string author_email = 5;
+}
+
+message GitCommitResponse {
+    string commit_hash = 1;
+    string message = 2;
+    int32 files_changed = 3;
+}
+
+message GitDiffRequest {
+    string path = 1;
+    string base_ref = 2; // Default: HEAD
+    string target_ref = 3; // Default: working directory
+    repeated string files = 4;
+}
+
+message GitDiffResponse {
+    repeated GitFileDiff diffs = 1;
+    int32 total_additions = 2;
+    int32 total_deletions = 3;
+}
+
+message GitFileDiff {
+    string path = 1;
+    string status = 2;
+    int32 additions = 3;
+    int32 deletions = 4;
+    string patch = 5;
+}
+
+message GitBranchRequest {
+    string path = 1;
+    oneof operation {
+        string checkout = 2;
+        string create = 3;
+        string delete = 4;
+    }
+}
+
+message GitBranchResponse {
+    string current_branch = 1;
+    repeated string branches = 2;
+}
+
+// ============ Health Types ============
+
+message HeartbeatResponse {
+    bool alive = 1;
+    int64 uptime_seconds = 2;
+    int64 timestamp = 3;
+}
+
+message WorkerStatus {
+    string worker_id = 1;
+    string session_id = 2;
+    WorkerState state = 3;
+    ResourceUsage resources = 4;
+    int64 uptime_seconds = 5;
+    int32 active_executions = 6;
+    repeated string available_languages = 7;
+}
+
+enum WorkerState {
+    WORKER_STATE_UNKNOWN = 0;
+    WORKER_STATE_INITIALIZING = 1;
+    WORKER_STATE_READY = 2;
+    WORKER_STATE_BUSY = 3;
+    WORKER_STATE_PAUSED = 4;
+    WORKER_STATE_SHUTTING_DOWN = 5;
+}
+
+message ResourceUsage {
+    float cpu_percent = 1;
+    int64 memory_bytes = 2;
+    int64 memory_limit_bytes = 3;
+    int64 disk_used_bytes = 4;
+    int64 disk_limit_bytes = 5;
+}
+
+message ShutdownRequest {
+    bool graceful = 1;
+    int32 timeout_seconds = 2;
+}
+
+message ShutdownResponse {
+    bool accepted = 1;
+    string message = 2;
+}

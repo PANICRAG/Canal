@@ -1,0 +1,20 @@
+{
+  "name": "marketing",
+  "version": "1.0.0",
+  "description": "Create content, plan campaigns, and analyze performance across marketing channels. Maintain brand voice consistency, track competitors, and report on what's working.",
+  "author": "Anthropic",
+  "required_categories": [],
+  "optional_categories": [
+    "~~chat",
+    "~~design",
+    "~~marketing-automation",
+    "~~product-analytics",
+    "~~knowledge-base",
+    "~~seo",
+    "~~email-marketing"
+  ],
+  "config": {
+    "timeout_ms": 120000,
+    "max_tokens": 8192
+  }
+}

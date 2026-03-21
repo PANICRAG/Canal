@@ -1,0 +1,92 @@
+[package]
+name = "gateway-core"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "AI Gateway core library - LLM routing, MCP gateway, and workflow engine"
+
+[dependencies]
+gateway-tool-types.workspace = true
+gateway-tools.workspace = true
+gateway-llm = { path = "../gateway-llm" }
+gateway-memory = { path = "../gateway-memory" }
+gateway-plugins = { path = "../gateway-plugins" }
+gateway-service-traits = { path = "../gateway-service-traits" }
+canal-cv = { path = "../../engine/canal-cv" }
+tokio.workspace = true
+tokio-stream.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+serde_yaml.workspace = true
+sqlx.workspace = true
+qdrant-client.workspace = true
+reqwest.workspace = true
+thiserror.workspace = true
+anyhow.workspace = true
+tracing.workspace = true
+chrono.workspace = true
+uuid.workspace = true
+async-trait.workspace = true
+futures.workspace = true
+axum.workspace = true
+dashmap = "6"
+# bollard removed — Docker container management belongs in Platform Service
+base64 = "0.22"
+image = { version = "0.25", default-features = false, features = ["png", "jpeg"] }
+regex = "1.10"
+tempfile = "3.10"
+glob = "0.3"
+url = "2.5"
+async-stream = "0.3"
+async-recursion = "1.0"
+flate2 = "1.0"
+bytes = "1.5"
+tokio-tungstenite = { version = "0.24", features = ["native-tls"] }
+dirs = "6.0.0"
+sha2 = "0.10.9"
+hmac = "0.12"
+
+[features]
+default = []
+omniparser = ["dep:ort", "dep:ndarray", "dep:strsim", "dep:pure-onnx-ocr"]
+graph = []
+collaboration = ["graph", "learning"]
+orchestration = ["graph", "collaboration"]
+prompt-constraints = []
+context-engineering = []
+multimodal = []
+cache = []
+learning = ["graph"]
+jobs = ["graph", "collaboration"]
+intelligence = ["multimodal", "cache", "learning"]
+full-orchestration = ["orchestration", "intelligence", "jobs"]
+devtools = ["dep:devtools-core"]
+langfuse = ["devtools", "devtools-core/langfuse"]
+database = []
+
+[dependencies.ort]
+workspace = true
+optional = true
+
+[dependencies.ndarray]
+workspace = true
+optional = true
+
+[dependencies.strsim]
+workspace = true
+optional = true
+
+[dependencies.pure-onnx-ocr]
+workspace = true
+optional = true
+
+[dependencies.devtools-core]
+path = "../devtools-core"
+optional = true
+
+[dev-dependencies]
+tokio-test.workspace = true
+tempfile = "3"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+hmac = "0.12"
+hex = "0.4"

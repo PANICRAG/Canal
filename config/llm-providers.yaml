@@ -1,0 +1,166 @@
+# Canal LLM Provider Configuration
+# H3.1 - LLM 提供商优先级配置
+# Generated: 2026-01-22
+
+providers:
+  # Alibaba Qwen (DashScope) - 主力模型，最高优先级
+  - name: qwen
+    priority: 0
+    enabled: true
+    models:
+      - id: qwen-turbo
+        display_name: "Qwen Turbo"
+        max_tokens: 8192
+      - id: qwen3-max-2026-01-23
+        display_name: "Qwen3 Max"
+        max_tokens: 8192
+      - id: qwq-plus
+        display_name: "QwQ Plus (Reasoning)"
+        max_tokens: 8192
+        thinking_enabled: true
+      - id: qwen3-vl-plus
+        display_name: "Qwen3 VL Plus (Vision + Tools)"
+        max_tokens: 8192
+        multimodal: true
+        function_calling: true
+        default: true
+    rate_limit:
+      requests_per_minute: 500
+      tokens_per_minute: 100000
+    fallback: anthropic
+    api_key_env: QWEN_API_KEY
+    base_url: https://dashscope-intl.aliyuncs.com/compatible-mode
+    compatible_api: openai
+
+  # Anthropic Claude - 备选
+  - name: anthropic
+    priority: 1
+    enabled: true
+    models:
+      - id: claude-sonnet-4-6
+        display_name: "Claude Sonnet 4.6"
+        max_tokens: 8192
+        default: true
+      - id: claude-opus-4-6
+        display_name: "Claude Opus 4.6"
+        max_tokens: 8192
+      - id: claude-haiku-4-5-20251001
+        display_name: "Claude Haiku 4.5"
+        max_tokens: 8192
+    rate_limit:
+      requests_per_minute: 1000
+      tokens_per_minute: 100000
+    fallback: google
+    api_key_env: ANTHROPIC_API_KEY
+
+  # Google AI Gemini - 同等优先级
+  - name: google
+    priority: 1
+    enabled: true
+    models:
+      - id: gemini-3-pro
+        display_name: "Gemini 3 Pro"
+        max_tokens: 8192
+        default: true
+      - id: gemini-3-flash
+        display_name: "Gemini 3 Flash"
+        max_tokens: 8192
+    rate_limit:
+      requests_per_minute: 500
+      tokens_per_minute: 50000
+    fallback: anthropic
+    api_key_env: GOOGLE_AI_API_KEY
+
+  # OpenRouter - UI-TARS GUI automation models
+  - name: openrouter
+    type: openrouter
+    priority: 2
+    enabled: true
+    base_url: "https://openrouter.ai/api/v1"
+    api_key_env: OPENROUTER_API_KEY
+    models:
+      - id: ui-tars-7b
+        model_id: "bytedance/ui-tars-1.5-7b"
+        display_name: "UI-TARS 7B"
+        max_tokens: 2048
+        multimodal: true
+        description: "UI-TARS 7B - GUI automation model for precision clicking"
+      - id: ui-tars-72b
+        model_id: "bytedance-research/ui-tars-72b:free"
+        display_name: "UI-TARS 72B (Free)"
+        max_tokens: 4096
+        multimodal: true
+        default: true
+        description: "UI-TARS 72B - Higher accuracy GUI automation (free tier)"
+    rate_limit:
+      requests_per_minute: 60
+      tokens_per_minute: 50000
+    fallback: null
+
+routing:
+  # 路由策略: priority | round-robin | least-latency | cost-optimized
+  strategy: round-robin  # 同等优先级使用轮询
+
+  # 健康检查
+  health_check:
+    enabled: true
+    interval_seconds: 30
+    timeout_seconds: 10
+    failure_threshold: 3
+
+  # 重试配置
+  retry:
+    max_attempts: 3
+    initial_backoff_ms: 100
+    max_backoff_ms: 5000
+    backoff_multiplier: 2.0
+
+# 模型选择规则
+model_routing:
+  # 根据任务类型选择模型
+  rules:
+    - task_type: code_generation
+      preferred_model: qwen3-max-2026-01-23
+      fallback_model: claude-sonnet-4-6
+
+    - task_type: video_generation
+      preferred_model: gemini-3-flash
+      fallback_model: null  # 无备选
+
+    - task_type: chat
+      preferred_model: qwen3-max-2026-01-23  # 使用最强文本模型，vision preprocessor处理图片
+      fallback_model: claude-sonnet-4-6
+
+    - task_type: browser_automation
+      preferred_model: qwen3-max-2026-01-23  # 使用最强文本模型，vision preprocessor将截图转文字描述
+      fallback_model: claude-sonnet-4-6
+
+    - task_type: gui_click
+      preferred_model: ui-tars-72b  # UI-TARS for precision GUI clicking
+      fallback_model: ui-tars-7b
+      provider: openrouter
+
+    - task_type: reasoning
+      preferred_model: qwq-plus  # 推理任务使用QwQ
+      fallback_model: claude-sonnet-4-6
+
+    - task_type: quick_response
+      preferred_model: qwen-turbo
+      fallback_model: claude-haiku-4-5-20251001
+
+# Vision Preprocessor - Multi-model browser automation
+# Screenshots are analyzed by a vision model and returned as structured text
+# to reduce token usage for text-only models (e.g., Qwen3-max)
+vision_preprocessor:
+  enabled: true
+  provider: anthropic
+  model: claude-sonnet-4-6
+  max_tokens: 1024
+  cache_ttl_seconds: 300
+  timeout_seconds: 15
+
+# 成本控制
+cost_control:
+  daily_budget_usd: 100.0
+  alert_threshold_percent: 80
+  hard_limit: false  # true = 达到预算停止服务

@@ -1,0 +1,48 @@
+# Rust / Cargo
+/target/
+**/*.rs.bk
+*.pdb
+
+# Environment & Secrets
+.env
+.env.local
+.env.*.local
+.env.production
+*.pem
+*.key
+credentials.json
+secrets.yaml
+secrets/
+.age-key.txt
+
+# IDE & Editors
+.idea/
+*.swp
+*.swo
+*~
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# OS Files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Node (for any tooling)
+node_modules/
+
+# ONNX models (large binary files)
+models/
+*.onnx
+
+# Build artifacts
+*.so
+*.dylib
+*.dll

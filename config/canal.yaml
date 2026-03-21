@@ -1,0 +1,18 @@
+# Canal Server Configuration
+# Override with CANAL_MODULES env var (e.g., "engine,identity" or "all")
+
+host: "0.0.0.0"
+port: 4000
+
+# Module selection
+modules:
+  engine: true
+  session: true
+  sandbox: true
+  billing: true
+  identity: true
+  admin: true
+  platform: true
+
+# Database (required for session, billing, admin modules)
+# database_url: "postgres://localhost/canal"

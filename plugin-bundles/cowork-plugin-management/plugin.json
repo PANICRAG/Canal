@@ -1,0 +1,12 @@
+{
+  "name": "cowork-plugin-management",
+  "version": "0.1.0",
+  "description": "Create, customize, and manage plugins tailored to your organization's tools and workflows. Configure MCP servers, adjust plugin behavior, and adapt templates to match how your team works.",
+  "author": "Anthropic",
+  "required_categories": [],
+  "optional_categories": [],
+  "config": {
+    "timeout_ms": 60000,
+    "max_tokens": 4096
+  }
+}

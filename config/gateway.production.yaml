@@ -1,0 +1,70 @@
+# ==========================================
+# AI Gateway - Production Configuration
+# ==========================================
+# Overrides for production environment
+
+server:
+  port: 4000
+  host: "0.0.0.0"
+  timeout: 120
+  max_body_size: 10485760
+
+cors:
+  origins:
+    - "https://your-app.com"
+    - "https://www.your-app.com"
+    - "https://api.your-app.com"
+  credentials: true
+
+logging:
+  level: "warn"
+  format: "json"
+  timestamps: true
+
+database:
+  max_connections: 20
+  min_connections: 5
+  connect_timeout: 10
+  idle_timeout: 300
+  max_lifetime: 1800
+
+llm:
+  cache_enabled: true
+  cache_ttl: 3600
+  max_retries: 3
+  providers:
+    ollama:
+      enabled: false
+
+mcp:
+  connect_timeout: 10
+  request_timeout: 30
+  reconnect:
+    enabled: true
+    max_attempts: 10
+
+workflow:
+  max_concurrent: 50
+  persistence: true
+
+rate_limit:
+  enabled: true
+  default_rpm: 1000
+  burst: 50
+
+auth:
+  api_key_enabled: true
+  jwt_enabled: true
+  jwt_expiration: 3600
+
+health:
+  detailed: false
+  check_database: true
+  check_llm: true
+  check_mcp: true
+
+metrics:
+  enabled: true
+  process_metrics: true
+  http_metrics: true
+  llm_metrics: true

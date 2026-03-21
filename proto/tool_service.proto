@@ -1,0 +1,97 @@
+syntax = "proto3";
+
+package canal.tools;
+
+option go_package = "github.com/canal/proto/tools";
+
+import "common.proto";
+
+// Stateless tool execution service.
+// Horizontally scalable — no session affinity required.
+service ToolService {
+    // Execute a tool by namespace and name.
+    rpc Execute(ExecuteRequest) returns (ExecuteResponse);
+
+    // Execute a tool using LLM tool name format (namespace_name).
+    // Includes permission checking.
+    rpc ExecuteLlmToolCall(LlmToolCallRequest) returns (ExecuteResponse);
+
+    // Execute a tool with pre-approved permission.
+    rpc ExecuteLlmToolCallApproved(LlmToolCallRequest) returns (ExecuteResponse);
+
+    // List all available tools.
+    rpc ListTools(ListToolsRequest) returns (ListToolsResponse);
+
+    // Get tool schemas for LLM consumption.
+    rpc SchemasForLlm(SchemasRequest) returns (SchemasResponse);
+
+    // Health check.
+    rpc Health(HealthRequest) returns (HealthResponse);
+}
+
+// ============ Request/Response Types ============
+
+message ExecuteRequest {
+    string namespace = 1;
+    string name = 2;
+    string input_json = 3;   // JSON-encoded input
+    canal.common.TraceContext trace = 10;
+}
+
+message LlmToolCallRequest {
+    string tool_name = 1;     // e.g. "filesystem_read_file"
+    string arguments_json = 2; // JSON-encoded arguments
+    canal.common.TraceContext trace = 10;
+}
+
+message ExecuteResponse {
+    repeated ContentBlock content = 1;
+    bool is_error = 2;
+}
+
+message ContentBlock {
+    oneof block {
+        TextContent text = 1;
+        ImageContent image = 2;
+    }
+}
+
+message TextContent {
+    string text = 1;
+}
+
+message ImageContent {
+    string data = 1;       // base64 encoded
+    string mime_type = 2;
+}
+
+message ListToolsRequest {
+    repeated string enabled_namespaces = 1;  // empty = all
+    canal.common.TraceContext trace = 10;
+}
+
+message ListToolsResponse {
+    repeated ToolInfo tools = 1;
+}
+
+message ToolInfo {
+    string namespace = 1;
+    string name = 2;
+    string description = 3;
+    string input_schema_json = 4;  // JSON Schema
+}
+
+message SchemasRequest {
+    canal.common.TraceContext trace = 10;
+}
+
+message SchemasResponse {
+    repeated string schemas_json = 1;  // Each entry is a JSON Schema string
+}
+
+message HealthRequest {}
+
+message HealthResponse {
+    bool healthy = 1;
+    int32 tool_count = 2;
+}

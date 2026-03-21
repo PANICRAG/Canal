@@ -1,0 +1,56 @@
+# Cargo configuration for AI Gateway
+
+[build]
+# Use all available CPU cores for parallel compilation
+jobs = -1
+
+[target.x86_64-unknown-linux-gnu]
+# Linux-specific linker settings
+rustflags = ["-C", "link-arg=-fuse-ld=lld"]
+
+[target.x86_64-pc-windows-msvc]
+# Windows-specific settings
+
+[target.x86_64-apple-darwin]
+# macOS Intel-specific settings
+
+[target.aarch64-apple-darwin]
+# macOS Apple Silicon-specific settings
+
+[alias]
+# Useful cargo aliases
+b = "build"
+br = "build --release"
+c = "check"
+t = "nextest run"
+tw = "nextest run --no-capture"
+r = "run"
+rr = "run --release"
+lint = "clippy --all-targets --all-features -- -D warnings"
+
+# Run the API server
+api = "run --bin gateway-api"
+api-release = "run --release --bin gateway-api"
+
+# Run the MCP server
+mcp = "run --bin gateway-mcp-server"
+
+# Run the CLI
+cli = "run --bin gateway --"
+
+# Development workflow
+dev = "watch -x 'run --bin gateway-api'"
+
+# Full check (format + lint + test)
+check-all = "check && fmt --all -- --check && clippy --all-targets --all-features -- -D warnings && nextest run"
+
+[env]
+# Default environment variables for cargo commands
+RUST_BACKTRACE = "1"
+
+[net]
+# Git fetch with CLI (can help with authentication issues)
+git-fetch-with-cli = true
+
+[registries.crates-io]
+protocol = "sparse"

@@ -1,0 +1,199 @@
+# Canal MCP Server Configuration
+# H3.2 - MCP 服务器列表配置
+# Generated: 2026-01-22
+
+servers:
+  # ============================================
+  # Osascript MCP - macOS Automation (预装)
+  # Execute AppleScript commands to control Mac applications
+  # ============================================
+  - name: osascript-mcp
+    namespace: mac
+    enabled: true
+    transport: stdio
+    command: node
+    args:
+      - "${CANAL_ROOT}/servers/osascript-mcp/index.js"
+    startup_timeout_secs: 10
+    health_check:
+      enabled: true
+      interval_secs: 60
+    # macOS only - will be skipped on other platforms
+    platform: macos
+    # Tools provided: osascript (execute AppleScript)
+
+  # ============================================
+  # Windows MCP - Windows Automation (预装)
+  # Control Windows through UI automation, app control, shell commands
+  # https://github.com/CursorTouch/Windows-MCP
+  # ============================================
+  - name: windows-mcp
+    namespace: win
+    enabled: true
+    transport: stdio
+    command: uvx
+    args:
+      - "windows-mcp"
+    startup_timeout_secs: 30
+    health_check:
+      enabled: true
+      interval_secs: 60
+    # Windows only - will be skipped on other platforms
+    platform: windows
+    # Tools provided: click, type, scroll, move, shortcut, wait, snapshot, app, shell, scrape
+    # Prerequisites: Python 3.13+, UV package manager (pip install uv)
+
+  # ============================================
+  # VideoCLI MCP - 视频创作工具
+  # ============================================
+  - name: videocli-mcp
+    namespace: videocli
+    enabled: true
+    transport: stdio
+    command: npx
+    args:
+      - "-y"
+      - "@anthropic-ai/mcp-server-videocli"
+    env:
+      # 继承系统环境变量
+      PATH: "${PATH}"
+    startup_timeout_secs: 30
+    health_check:
+      enabled: true
+      interval_secs: 60
+
+  # ============================================
+  # Filesystem MCP - 文件系统操作
+  # ============================================
+  - name: filesystem-mcp
+    namespace: fs
+    enabled: true
+    transport: stdio
+    command: npx
+    args:
+      - "-y"
+      - "@anthropic-ai/mcp-server-filesystem"
+      - "/workspace"  # 工作目录，可根据需要修改
+    startup_timeout_secs: 10
+    # 安全限制
+    security:
+      allowed_paths:
+        - "/workspace"
+        - "${HOME}/Documents"
+        - "${HOME}/Downloads"
+      denied_paths:
+        - "/etc"
+        - "/var"
+        - "${HOME}/.ssh"
+        - "${HOME}/.aws"
+
+  # ============================================
+  # DaVinci Resolve MCP - 视频编辑
+  # ============================================
+  - name: davinci-mcp
+    namespace: davinci
+    enabled: true
+    transport: stdio
+    command: npx
+    args:
+      - "-y"
+      - "@samuelgursky/davinci-resolve-mcp"
+    startup_timeout_secs: 60
+    # DaVinci Resolve 必须在本地运行
+    requirements:
+      local_app: "DaVinci Resolve"
+      min_version: "18.0"
+
+  # ============================================
+  # Adobe MCP - Photoshop/Premiere (已禁用)
+  # ============================================
+  - name: adobe-mcp
+    namespace: adobe
+    enabled: false  # 需要时启用
+    transport: stdio
+    command: npx
+    args:
+      - "-y"
+      - "adobe-mcp"
+    startup_timeout_secs: 60
+
+  # ============================================
+  # Video Production MCP - Remote service (example)
+  # ============================================
+  - name: videoproduction-example
+    namespace: videoprod
+    enabled: true
+    transport: sse  # Server-Sent Events for remote HTTP servers
+    url: "https://your-video-service.example.com/mcp"
+    # 如果需要认证，添加以下配置:
+    # auth:
+    #   type: bearer
+    #   token: "${VIDEO_SERVICE_TOKEN}"
+    startup_timeout_secs: 30
+    health_check:
+      enabled: true
+      interval_secs: 60
+
+  # ============================================
+  # Browser MCP - Chrome Extension MCP Server
+  # The browser extension runs its own MCP server on port 3456
+  # This connects Gateway API to the browser extension for automation
+  # ============================================
+  - name: browser-extension-mcp
+    namespace: browser
+    enabled: true
+    transport: sse  # HTTP/SSE transport to local extension MCP server
+    url: "http://127.0.0.1:3456/mcp"
+    startup_timeout_secs: 10
+    health_check:
+      enabled: true
+      interval_secs: 30
+    # Tools provided: browser_navigate, browser_click, browser_fill, browser_type,
+    # browser_screenshot, browser_snapshot, browser_get_tabs, etc.
+
+# ============================================
+# 全局连接配置
+# ============================================
+connection:
+  # 连接超时
+  timeout_secs: 30
+
+  # 重试配置
+  retry:
+    max_attempts: 3
+    initial_delay_ms: 1000
+    max_delay_ms: 10000
+    backoff_multiplier: 2.0
+
+  # 健康检查
+  health_check:
+    enabled: true
+    interval_secs: 60
+    failure_threshold: 3
+
+  # 连接池
+  pool:
+    max_connections_per_server: 5
+    idle_timeout_secs: 300
+
+# ============================================
+# 工具权限配置
+# ============================================
+tool_permissions:
+  # 需要用户确认的危险操作
+  require_confirmation:
+    - "fs.delete"
+    - "fs.write_file"
+    - "davinci.render"
+    - "videocli.publish_*"
+
+  # 完全禁止的操作
+  blocked:
+    - "fs.execute"  # 禁止执行任意命令
+
+  # 速率限制 (每分钟)
+  rate_limits:
+    "fs.*": 100
+    "videocli.*": 30
+    "davinci.*": 10
+    "browser.*": 60

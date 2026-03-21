@@ -1,0 +1,40 @@
+# ==========================================
+# AI Gateway - Staging Configuration
+# ==========================================
+# Overrides for staging environment
+
+server:
+  port: 4000
+  host: "0.0.0.0"
+  timeout: 120
+
+cors:
+  origins:
+    - "https://staging.your-app.com"
+    - "https://staging-api.your-app.com"
+
+logging:
+  level: "info"
+  format: "json"
+
+database:
+  max_connections: 10
+  min_connections: 2
+
+llm:
+  cache_enabled: true
+  cache_ttl: 1800
+  providers:
+    ollama:
+      enabled: false
+
+rate_limit:
+  enabled: true
+  default_rpm: 500
+
+auth:
+  api_key_enabled: true
+  jwt_enabled: true
+
+health:
+  detailed: true

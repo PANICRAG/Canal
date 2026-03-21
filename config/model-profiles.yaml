@@ -1,0 +1,266 @@
+profiles:
+- id: default
+  name: Default Profile
+  description: Default routing with Qwen primary, Anthropic fallback
+  enabled: true
+  routing:
+    strategy: primary_fallback
+    primary:
+      provider: qwen
+      model: qwen3-max-2026-01-23
+    fallbacks:
+    - provider: anthropic
+      model: claude-sonnet-4-6
+    allow_explicit_model: true
+  agent:
+    system_prompt: ''
+    allowed_tools: []
+    max_turns: 25
+    task_timeout_seconds: 300
+    semantic_memory: true
+  cache_enabled: false
+  cache_ttl_seconds: 3600
+- id: canal-ab-experiment
+  name: A/B Test Experiment
+  description: 70/30 split between Qwen and Anthropic for quality comparison
+  enabled: false
+  routing:
+    strategy: ab_test
+    ab_test_variants:
+    - name: control
+      target:
+        provider: qwen
+        model: qwen-max
+      weight: 0.7
+    - name: treatment
+      target:
+        provider: anthropic
+        model: claude-sonnet-4-6
+      weight: 0.3
+    allow_explicit_model: false
+  agent:
+    system_prompt: ''
+    allowed_tools: []
+    max_turns: 25
+    task_timeout_seconds: 300
+  cache_enabled: false
+  cache_ttl_seconds: 3600
+- id: canal-cascade-v1
+  name: Cascade Upgrade
+  description: Start with fast/cheap model, upgrade to powerful for complex tasks
+  enabled: true
+  routing:
+    strategy: cascade
+    cascade:
+      tiers:
+      - label: fast
+        target:
+          provider: qwen
+          model: qwen-turbo
+        max_tokens: 2048
+        quality_threshold: 0.6
+      - label: standard
+        target:
+          provider: qwen
+          model: qwen-max
+        max_tokens: 4096
+        quality_threshold: 0.8
+      - label: powerful
+        target:
+          provider: anthropic
+          model: claude-sonnet-4-6
+        max_tokens: null
+        quality_threshold: null
+      max_escalations: 2
+    allow_explicit_model: false
+  agent:
+    system_prompt: ''
+    allowed_tools: []
+    max_turns: 25
+    task_timeout_seconds: 300
+  cache_enabled: false
+  cache_ttl_seconds: 3600
+- id: canal-code-v1
+  name: Code Assistant
+  description: Optimized for coding tasks with Anthropic Claude
+  enabled: true
+  routing:
+    strategy: task_type_rules
+    task_type_rules:
+    - task_pattern: ^code.*
+      target:
+        provider: anthropic
+        model: claude-sonnet-4-6
+      priority: 1
+    - task_pattern: ^review.*
+      target:
+        provider: anthropic
+        model: claude-sonnet-4-6
+      priority: 2
+    - task_pattern: ^explain.*
+      target:
+        provider: qwen
+        model: qwen-max
+      priority: 3
+    task_type_default:
+      provider: qwen
+      model: qwen-max
+    allow_explicit_model: true
+  agent:
+    system_prompt: You are an expert software engineer.
+    allowed_tools: []
+    max_turns: 50
+    task_timeout_seconds: 600
+    semantic_memory: true
+  cache_enabled: false
+  cache_ttl_seconds: 3600
+- id: canal-reliable-v1
+  name: Reliable Gateway V1
+  description: Production-ready profile with Qwen primary, Anthropic fallback
+  enabled: true
+  routing:
+    strategy: primary_fallback
+    primary:
+      provider: qwen
+      model: qwen-max
+    fallbacks:
+    - provider: anthropic
+      model: claude-sonnet-4-6
+    - provider: google
+      model: gemini-2.0-flash
+    allow_explicit_model: true
+  agent:
+    system_prompt: ''
+    allowed_tools: []
+    max_turns: 25
+    task_timeout_seconds: 300
+  cache_enabled: false
+  cache_ttl_seconds: 3600
+- id: canal-dynamic-v1
+  name: AI Dynamic Router
+  description: AI-powered dynamic routing - automatically selects optimal model based on task complexity
+  enabled: true
+  routing:
+    strategy: router_agent
+    primary:
+      provider: qwen
+      model: qwen-turbo
+    fallbacks:
+    - provider: qwen
+      model: qwen-max
+    - provider: anthropic
+      model: claude-sonnet-4-6
+    - provider: google
+      model: gemini-2.0-flash
+    allow_explicit_model: false
+    classifier_model: qwen-turbo
+  agent:
+    system_prompt: ''
+    allowed_tools: []
+    max_turns: 25
+    task_timeout_seconds: 300
+  cache_enabled: true
+  cache_ttl_seconds: 300
+- id: canal-vision-v1
+  name: Vision Aware
+  description: Routes to vision-capable models when images detected
+  enabled: true
+  routing:
+    strategy: multimodal
+    multimodal:
+      text_target:
+        provider: qwen
+        model: qwen3-max
+      vision_target:
+        provider: openai
+        model: gpt-4o
+      hybrid_target:
+        provider: anthropic
+        model: claude-sonnet-4-20250514
+    allow_explicit_model: true
+  agent:
+    system_prompt: ''
+    allowed_tools: []
+    max_turns: 25
+    task_timeout_seconds: 300
+  cache_enabled: false
+  cache_ttl_seconds: 3600
+templates:
+- template_id: tpl-chat-assistant
+  name: Chat Assistant Template
+  description: Template for general chat assistant profiles
+  category: chat
+  base_profile:
+    id: __template_base__
+    name: Chat Assistant
+    description: General-purpose chat profile
+    enabled: true
+    routing:
+      strategy: primary_fallback
+      primary:
+        provider: qwen
+        model: qwen-max
+      fallbacks:
+      - provider: anthropic
+        model: claude-sonnet-4-6
+      allow_explicit_model: true
+    agent:
+      system_prompt: You are a helpful assistant.
+      allowed_tools: []
+      max_turns: 25
+      task_timeout_seconds: 300
+    cache_enabled: true
+    cache_ttl_seconds: 1800
+- template_id: tpl-code-assistant
+  name: Code Assistant Template
+  description: Template for code-focused assistant profiles
+  category: coding
+  base_profile:
+    id: __template_base__
+    name: Code Assistant
+    description: Coding-optimized profile
+    enabled: true
+    routing:
+      strategy: primary_fallback
+      primary:
+        provider: anthropic
+        model: claude-sonnet-4-6
+      fallbacks:
+      - provider: qwen
+        model: qwen-max
+      allow_explicit_model: true
+    agent:
+      system_prompt: You are an expert software engineer. Help users with coding tasks.
+      allowed_tools: []
+      max_turns: 50
+      task_timeout_seconds: 600
+    cache_enabled: false
+    cache_ttl_seconds: 3600
+- template_id: tpl-dynamic-router
+  name: AI Dynamic Router Template
+  description: Template for AI-powered dynamic routing profiles that auto-select optimal models
+  category: advanced
+  base_profile:
+    id: __template_base__
+    name: AI Dynamic Router
+    description: AI-powered dynamic routing profile
+    enabled: true
+    routing:
+      strategy: router_agent
+      primary:
+        provider: qwen
+        model: qwen-turbo
+      fallbacks:
+      - provider: qwen
+        model: qwen-max
+      - provider: anthropic
+        model: claude-sonnet-4-6
+      allow_explicit_model: false
+      classifier_model: qwen-turbo
+    agent:
+      system_prompt: ''
+      allowed_tools: []
+      max_turns: 25
+      task_timeout_seconds: 300
+    cache_enabled: true
+    cache_ttl_seconds: 300

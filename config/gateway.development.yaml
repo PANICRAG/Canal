@@ -1,0 +1,39 @@
+# ==========================================
+# AI Gateway - Development Configuration
+# ==========================================
+# Overrides for local development
+
+server:
+  port: 4000
+  host: "127.0.0.1"
+
+cors:
+  origins:
+    - "http://localhost:3000"
+    - "http://localhost:5173"
+    - "http://127.0.0.1:3000"
+    - "http://127.0.0.1:5173"
+
+logging:
+  level: "debug"
+  format: "pretty"
+
+database:
+  max_connections: 5
+  min_connections: 1
+
+llm:
+  cache_enabled: false
+  providers:
+    ollama:
+      enabled: true
+
+rate_limit:
+  enabled: false
+
+auth:
+  api_key_enabled: false
+  jwt_enabled: false
+
+health:
+  detailed: true

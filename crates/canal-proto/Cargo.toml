@@ -1,0 +1,13 @@
+[package]
+name = "canal-proto"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Centralized protobuf definitions for all Canal gRPC services"
+
+[dependencies]
+prost = "0.13"
+tonic = "0.12"
+
+[build-dependencies]
+tonic-build = "0.12"

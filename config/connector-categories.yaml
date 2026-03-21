@@ -1,0 +1,97 @@
+# Connector Category Definitions
+#
+# Categories provide an abstraction layer between plugin bundles and
+# concrete connector implementations. A bundle declares it needs
+# "~~file-system" and the resolver finds matching connectors.
+
+categories:
+  ~~file-system:
+    display_name: "File System"
+    description: "Read, write, and manage files"
+    default_connectors: ["filesystem"]
+    icon: "folder"
+
+  ~~code-runner:
+    display_name: "Code Execution"
+    description: "Execute code in sandboxed environments"
+    default_connectors: ["executor"]
+    icon: "terminal"
+
+  ~~web-browser:
+    display_name: "Web Browser"
+    description: "Web automation and scraping"
+    default_connectors: ["browser"]
+    icon: "globe"
+
+  ~~mac-automation:
+    display_name: "macOS Automation"
+    description: "AppleScript and macOS system control"
+    default_connectors: ["mac"]
+    platform: "macos"
+    icon: "laptop"
+
+  ~~presentation:
+    display_name: "Presentation Tools"
+    description: "Create and edit slide presentations"
+    default_connectors: ["pptx"]
+    icon: "presentation"
+
+  ~~spreadsheet:
+    display_name: "Spreadsheet Tools"
+    description: "Read, write, and analyze spreadsheets"
+    default_connectors: ["xlsx"]
+    icon: "table"
+
+  ~~document:
+    display_name: "Document Tools"
+    description: "Create and edit documents"
+    default_connectors: ["docx"]
+    icon: "file-text"
+
+  ~~pdf:
+    display_name: "PDF Tools"
+    description: "Read, create, and manipulate PDFs"
+    default_connectors: ["pdf"]
+    icon: "file"
+
+  ~~data-warehouse:
+    display_name: "Data Warehouse"
+    description: "Connect to data warehouses and databases"
+    default_connectors: []
+    icon: "database"
+
+  ~~chat:
+    display_name: "Chat"
+    description: "Team messaging and communication"
+    default_connectors: ["slack"]
+    icon: "message-circle"
+
+  ~~email:
+    display_name: "Email"
+    description: "Email access and management"
+    default_connectors: ["ms365"]
+    icon: "mail"
+
+  ~~calendar:
+    display_name: "Calendar"
+    description: "Calendar and scheduling"
+    default_connectors: ["ms365"]
+    icon: "calendar"
+
+  ~~knowledge-base:
+    display_name: "Knowledge Base"
+    description: "Wikis, docs, and knowledge management"
+    default_connectors: ["notion"]
+    icon: "book-open"
+
+  ~~project-tracker:
+    display_name: "Project Tracker"
+    description: "Task and project management"
+    default_connectors: ["asana", "linear", "atlassian"]
+    icon: "kanban"
+
+  ~~office-suite:
+    display_name: "Office Suite"
+    description: "Documents, spreadsheets, and presentations"
+    default_connectors: ["ms365"]
+    icon: "briefcase"

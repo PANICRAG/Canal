@@ -1,0 +1,19 @@
+{
+  "name": "finance",
+  "version": "1.0.0",
+  "description": "Streamline finance and accounting workflows, from journal entries and reconciliation to financial statements and variance analysis.",
+  "author": "Anthropic",
+  "required_categories": [],
+  "optional_categories": [
+    "~~data-warehouse",
+    "~~email",
+    "~~office-suite",
+    "~~chat",
+    "~~erp",
+    "~~analytics"
+  ],
+  "config": {
+    "timeout_ms": 120000,
+    "max_tokens": 8192
+  }
+}

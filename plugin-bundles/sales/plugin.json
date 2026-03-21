@@ -1,0 +1,21 @@
+{
+  "name": "sales",
+  "version": "1.0.0",
+  "description": "Prospect, craft outreach, and build deal strategy faster. Prep for calls, manage your pipeline, and write personalized messaging that moves deals forward.",
+  "author": "Anthropic",
+  "required_categories": [],
+  "optional_categories": [
+    "~~calendar",
+    "~~chat",
+    "~~crm",
+    "~~data-enrichment",
+    "~~email",
+    "~~knowledge-base",
+    "~~conversation-intelligence",
+    "~~project-tracker"
+  ],
+  "config": {
+    "timeout_ms": 120000,
+    "max_tokens": 8192
+  }
+}
