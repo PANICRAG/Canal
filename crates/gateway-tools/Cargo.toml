@@ -24,7 +24,7 @@ async-recursion = "1.0"
 futures.workspace = true
 async-stream = "0.3"
 bollard = "0.16"
-sha2 = "0.10.9"
+sha2 = "0.11.0"
 
 [features]
 default = []
