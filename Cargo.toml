@@ -73,7 +73,7 @@ futures = "0.3"
 tokio-stream = { version = "0.1", features = ["sync"] }
 dashmap = "6"
 rand = "0.8"
-sha2 = "0.10"
+sha2 = "0.11"
 base62 = "2"
 
 # Authentication
